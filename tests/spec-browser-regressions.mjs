@@ -73,11 +73,11 @@ export async function runSpecBrowserRegressions(tab) {
     (await page.locator('[data-command-node="model-v2"]').count()) === 0,
     '模板不应展示不支持 PARD 的 MRV2 主路径',
   );
-  await page.getByRole('button', { name: '◈ 投机推理 · 按方法展开', exact: true }).click();
+  await page.locator('.lesson-nav [data-view="spec-methods"]').click();
   check(
     (await page.locator('h1').innerText()) === '投机推理方法地图',
-    '左侧快捷入口应可见并能返回',
+    '左侧专题入口应可访问并能返回',
   );
-  results.push('PARD 模板参数、MRV1 路径与左侧快捷入口');
+  results.push('PARD 模板参数、MRV1 路径与左侧专题入口');
   return results;
 }

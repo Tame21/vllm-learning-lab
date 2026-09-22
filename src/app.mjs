@@ -139,7 +139,7 @@ function render() {
     `
  <aside class="sidebar"><a class="brand" href="#lifecycle" data-lesson="lifecycle"><span class="brand-icon">${icon}</span><span>vLLM <em>Lab</em><small>推理，逐步看见。</small></span></a>
  <div class="search-wrap"><span>⌕</span><input id="search" type="search" aria-label="搜索学习专题" placeholder="搜索特性或关键词" value="${esc(query)}"><kbd>/</kbd></div>
- <nav class="sidebar-tools" aria-label="快捷工具"><button data-view="command" class="sidebar-command ${view === 'command' ? 'active' : ''}" ${view === 'command' ? 'aria-current="page"' : ''}><span class="sidebar-command-icon" aria-hidden="true">⌘</span><span><strong>启动命令 → 流程图</strong><small>按参数看路径，点击读源码</small></span><span class="sidebar-command-arrow" aria-hidden="true">↗</span></button><button data-view="spec-methods" class="sidebar-spec-shortcut ${view === 'spec-methods' ? 'active' : ''}" ${view === 'spec-methods' ? 'aria-current="page"' : ''}>◈ 投机推理 · 按方法展开</button></nav>
+ <nav class="sidebar-tools" aria-label="快捷工具"><button data-view="command" class="sidebar-command ${view === 'command' ? 'active' : ''}" ${view === 'command' ? 'aria-current="page"' : ''}><span class="sidebar-command-icon" aria-hidden="true">⌘</span><span><strong>启动命令 → 流程图</strong><small>按参数看路径，点击读源码</small></span><span class="sidebar-command-arrow" aria-hidden="true">↗</span></button></nav>
  <div class="sidebar-caption">学习地图 <span>${lessons.length} 个专题</span></div><nav class="lesson-nav" aria-label="学习专题">${
    groups
      .map((g) => {
@@ -149,7 +149,7 @@ function render() {
            `${l.title} ${l.english} ${l.summary}`.toLowerCase().includes(query.toLowerCase()),
        );
        return matches.length
-         ? `<div class="nav-group"><div class="group-label"><span>${g[1]}</span>${g[2]}</div>${g[0] === 'spec' ? `<button data-view="spec-methods" class="spec-map-nav ${view === 'spec-methods' ? 'selected' : ''}" ${view === 'spec-methods' ? 'aria-current="page"' : ''}>◈ 投机推理方法地图</button>` : ''}${matches.map((l) => `<button data-lesson="${l.id}" class="nav-item ${view === 'lab' && l.id === lesson.id ? 'selected' : ''}"><span class="nav-dot ${completed.includes(l.id) ? 'complete' : ''}">${completed.includes(l.id) ? '✓' : ''}</span>${l.title}</button>`).join('')}</div>`
+         ? `<div class="nav-group"><div class="group-label"><span>${g[1]}</span>${g[2]}</div>${g[0] === 'spec' ? `<button data-view="spec-methods" class="nav-item ${view === 'spec-methods' ? 'selected' : ''}" ${view === 'spec-methods' ? 'aria-current="page"' : ''}><span class="nav-dot" aria-hidden="true"></span>投机推理方法地图</button>` : ''}${matches.map((l) => `<button data-lesson="${l.id}" class="nav-item ${view === 'lab' && l.id === lesson.id ? 'selected' : ''}"><span class="nav-dot ${completed.includes(l.id) ? 'complete' : ''}">${completed.includes(l.id) ? '✓' : ''}</span>${l.title}</button>`).join('')}</div>`
          : '';
      })
      .join('') || '<p class="empty">没有匹配的专题</p>'

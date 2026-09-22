@@ -10,22 +10,6 @@
   margin-bottom: 24px;
   min-width: 0;
 }
-.sidebar-spec-shortcut {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px 8px;
-  border-radius: 8px;
-  border: 1px solid #44523f;
-  background: #222e30;
-  color: #c8dfa9;
-  text-align: center;
-  font-size: 12px;
-}
-.sidebar-spec-shortcut.active {
-  background: #d8f4af;
-  color: #233044;
-}
 .spec-entry {
   display: flex;
   align-items: center;
@@ -472,11 +456,6 @@
 .spec-stage-note p {
   margin: 8px 0 0;
   color: #667286;
-}
-.lesson-nav .spec-map-nav {
-  color: #c8ef9e;
-  border: 1px solid #3d513e;
-  margin: 6px 0;
 }
 @media (max-width: 1200px) {
   .spec-method-grid {
