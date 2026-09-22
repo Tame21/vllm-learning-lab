@@ -1,0 +1,21 @@
+export const terms = [
+  ['Token', '模型处理的基本单位，可以是字、词的一部分或其他符号。它与汉字、英语单词不是一一对应。'],
+  ['Prefill', '计算输入 prompt 的模型状态，并写入 KV Cache；完成后通常可采样第一枚输出。'],
+  ['Decode', '将刚生成的 token 作为新输入，复用历史 KV，继续生成下一个 token。'],
+  ['KV Cache', 'Attention 中历史 token 的 Key、Value 张量。它不是模型权重，也不是最终答案缓存。'],
+  ['Block / Page', 'KV Cache 的分配单位；每个块可以容纳固定数量的 token 槽位。'],
+  ['Block table', '将一个请求的逻辑块编号映射到物理块编号。'],
+  ['Logits', '模型为词表各 token 输出的未归一化分数。'],
+  ['Temperature', '采样时调整分布平滑程度的参数；0 通常表示贪心解码。'],
+  ['TTFT', 'Time To First Token，从请求发起到收到首 token 的时间；包含排队等开销。'],
+  [
+    'ITL / TPOT',
+    'ITL 是相邻 token 的间隔；TPOT 常按输出阶段的平均 token 时间统计，具体口径要看指标定义。',
+  ],
+  ['TP / PP / DP / EP', '分别是张量、流水线、数据、专家并行；拆分的对象不同。'],
+  ['Model Runner', '将一次调度计划转换成设备输入并执行模型的组件。MRV1 和 MRV2 都属于 V1 引擎。'],
+  ['Prefix cache', '复用同一前缀已计算的 KV；匹配还会受 LoRA、媒体 hash、cache salt 等影响。'],
+  ['Preemption', '资源不足时暂停某个请求并回收其资源；恢复时可能重新计算 KV。'],
+  ['Kernel', '在 GPU 或其他设备上完成具体张量运算的计算程序。'],
+  ['Connector', '调度器与 worker 协同的数据交换接口；外部传输库的内部实现可能不在本仓库。'],
+];

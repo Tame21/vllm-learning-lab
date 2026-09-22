@@ -1,0 +1,25 @@
+name: 缺陷反馈
+description: 报告学习内容、页面交互或启动问题
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: '请先移除私人路径、访问令牌、内部地址和业务数据。源码相对路径可以保留。'
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 使用哪个专题或命令示例？执行哪些步骤后出现问题？
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 环境
+      description: 系统、Node.js 版本、浏览器及参考源码 commit；无需填写本机目录。

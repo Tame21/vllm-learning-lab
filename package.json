@@ -1,0 +1,27 @@
+{
+  "name": "vllm-learning-lab",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "description": "可克隆运行的 vLLM 中文可视化学习工具：机制推演、投机方法地图与启动命令源码导航",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tame21/vllm-learning-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tame21/vllm-learning-lab/issues"
+  },
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "setup": "node scripts/setup-source.mjs",
+    "check:release": "node scripts/check-release.mjs",
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "pretest": "node scripts/build.mjs",
+    "test:browser": "node scripts/check-browser.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

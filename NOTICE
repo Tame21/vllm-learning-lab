@@ -1,0 +1,15 @@
+vLLM Learning Lab
+Copyright 2026 Tame21 and contributors
+
+This independent educational tool is distributed under the Apache License 2.0.
+It is not an official vLLM project or an inference server.
+
+The reference implementation and documentation are provided by vLLM:
+https://github.com/vllm-project/vllm
+Copyright the vLLM contributors. Licensed under Apache License 2.0 and any
+additional notices attached to individual upstream files.
+
+The setup script retrieves the upstream commit recorded in src/source-version.mjs
+into an ignored local cache. The upstream source is not bundled in this repository.
+Upstream files retain their original copyright and license notices. The source
+reader displays their contents locally without removing those notices.

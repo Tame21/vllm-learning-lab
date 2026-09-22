@@ -1,0 +1,345 @@
+.source-anchor + .source-anchor {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.source-anchor h2 {
+  font:
+    14px/1.7 ui-monospace,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.data-table {
+  overflow: auto;
+  max-width: 100%;
+  margin: 18px 0;
+}
+.data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #dfe5df;
+  white-space: nowrap;
+}
+.data-table th {
+  color: #5c6e56;
+  font-size: 11px;
+  font-weight: 600;
+  background: #eef4e8;
+}
+.data-table td {
+  color: #46523f;
+}
+.delta-arrow {
+  padding: 0 6px;
+  color: #87957b;
+}
+.state-inspector {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.state-inspector h3,
+.diagram-label,
+.comparison-panel h3 {
+  font-size: 13px;
+  margin: 20px 0 12px;
+}
+.block-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  gap: 6px;
+}
+.request-track {
+  flex-wrap: wrap;
+}
+.batch-tokens {
+  margin: 18px 0;
+}
+.batch-card {
+  flex-wrap: wrap;
+}
+.batch-card small {
+  font-size: 10px;
+}
+.req-D,
+.req-E,
+.req-F {
+  background: #e7e2f4;
+  color: #6a5884;
+}
+.logical-block small {
+  font-size: 10px;
+  display: block;
+  margin-top: 8px;
+}
+.schema-block {
+  background: #edf4e7;
+  border: 1px solid #d6e2cd;
+  padding: 16px;
+  border-radius: 8px;
+  font:
+    12px/1.65 ui-monospace,
+    monospace;
+  overflow: auto;
+}
+.grammar-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pipeline-cell {
+  padding: 8px;
+  background: #e8efdf;
+  border-radius: 4px;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.pipeline-cell.current {
+  outline: 2px solid #7d995f;
+  background: #cce5b3;
+}
+.device-token {
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.workload-editor {
+  flex: 0 0 100%;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+.workload-editor h3 {
+  font-size: 13px;
+  margin: 0;
+}
+.workload-editor p,
+.comparison-panel p {
+  font-size: 11px;
+  color: #75826f;
+  line-height: 1.8;
+  margin: 8px 0 12px;
+}
+.preset-actions {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.preset-actions button {
+  font-size: 11px;
+  padding: 7px 9px;
+  background: #e9f0e3;
+  border-radius: 4px;
+}
+.request-editor-head,
+.request-editor-row {
+  display: grid;
+  grid-template-columns: 36px repeat(3, minmax(0, 1fr)) 28px;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.request-editor-head {
+  font-size: 11px;
+  color: #76836c;
+}
+.request-editor-row b {
+  font: 13px monospace;
+}
+.request-editor-row input,
+.setting input[type='number'] {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #cfd8c8;
+  border-radius: 5px;
+  background: white;
+  color: #394c2f;
+  font-size: 13px;
+}
+.request-editor-row button {
+  background: transparent;
+  color: #897269;
+  font-size: 20px;
+}
+.comparison-panel {
+  padding: 6px 20px 16px;
+  border-top: 1px solid var(--line);
+  background: #f4f8ee;
+}
+#parameter-error {
+  flex-basis: 100%;
+  color: #a84435;
+  font-size: 12px;
+  margin: 0;
+}
+#parameter-error:empty {
+  display: none;
+}
+.lesson-actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.learning-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: -8px 0 24px;
+  font-size: 11px;
+  color: #7e8a77;
+}
+.learning-context button {
+  background: #eaf0e4;
+  color: #526546;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.context-spacer {
+  flex: 1;
+}
+.numeric-challenge {
+  border-top: 1px solid var(--line);
+  margin-top: 25px;
+  padding-top: 20px;
+}
+.numeric-challenge h3 {
+  font-size: 16px;
+}
+.numeric-challenge label {
+  font-size: 11px;
+  color: #788a6c;
+}
+.numeric-challenge > div {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+.numeric-challenge input {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #c4d0bb;
+  padding: 8px;
+  border-radius: 4px;
+}
+.numeric-challenge button[data-action='check-challenge'] {
+  background: #263e2d;
+  color: white;
+  border-radius: 4px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+.numeric-challenge .feedback {
+  display: block;
+}
+.path-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  background: #e8f1df;
+  border: 1px solid #d6e4c8;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.path-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 24px;
+}
+.path-card h2 {
+  margin: 10px 0;
+  font-size: 20px;
+}
+.path-card p {
+  font-size: 13px;
+  color: #7b8872;
+}
+.path-card button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 15px 0;
+  background: white;
+  border-top: 1px solid #edf1e8;
+  font-size: 13px;
+}
+.path-card button div {
+  flex: 1;
+}
+.path-card button small {
+  display: block;
+  font-size: 10px;
+  color: #8b9882;
+  margin-top: 5px;
+}
+.secondary-paths {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 20px;
+}
+@media (max-width: 1000px) {
+  .path-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 650px) {
+  .lesson-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .lesson-actions {
+    justify-content: flex-start;
+  }
+  .topbar {
+    padding: 0 12px;
+  }
+  .topbar nav {
+    gap: 14px;
+  }
+  .workload-editor .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .device-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .block-pool {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .request-editor-head,
+  .request-editor-row {
+    grid-template-columns: 22px repeat(3, minmax(0, 1fr)) 22px;
+    gap: 5px;
+  }
+  .request-editor-row input {
+    padding: 7px 3px;
+  }
+  .comparison-panel {
+    padding: 8px 12px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 8px;
+  }
+}
