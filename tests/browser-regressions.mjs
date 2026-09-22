@@ -53,9 +53,23 @@ export async function runBrowserRegressions(tab) {
     (await page.locator('.code-line.highlight').innerText()).includes('def execute_model('),
     '源码高亮不能落到重载参数函数',
   );
+  check(
+    (await page.locator('.full-code .hljs-keyword').count()) > 0 &&
+      (await page.locator('.full-code .hljs-string').count()) > 0 &&
+      (await page.locator('.full-code .hljs-comment').count()) > 0,
+    '源码应区分关键字、字符串和注释',
+  );
+  await page.getByRole('button', { name: '自动换行', exact: true }).click();
+  check(
+    (await page
+      .getByRole('button', { name: '自动换行', exact: true })
+      .getAttribute('aria-pressed')) === 'true',
+    '长行应可切换自动换行',
+  );
+  await page.getByRole('button', { name: '定位行', exact: true }).click();
   await page.getByRole('button', { name: '关闭源码', exact: true }).click();
   check((await page.getByRole('dialog').count()) === 0, '源码弹窗应可关闭');
-  results.push('逐步源码、MRV2 与弹窗');
+  results.push('逐步源码、MRV2、语法高亮、自动换行与弹窗');
 
   await lesson('prefix');
   await page.getByLabel('执行时间轴').press('End');

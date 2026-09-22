@@ -1,0 +1,319 @@
+/* Source reader: VS Code Dark+ inspired colors; all assets are served locally. */
+dialog.source-editor {
+  width: min(1320px, 96vw);
+  height: min(900px, 88dvh);
+  max-height: 88dvh;
+  border: 1px solid #454545;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  box-shadow: 0 24px 80px #0008;
+  overflow: hidden;
+  color-scheme: dark;
+}
+dialog.source-editor[open] {
+  display: flex;
+  flex-direction: column;
+}
+.source-editor .source-titlebar {
+  position: static;
+  flex: none;
+  gap: 12px;
+  padding: 0 10px 0 0;
+  min-height: 45px;
+  background: #252526;
+  border-bottom: 1px solid #181818;
+}
+.source-editor .source-file-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  min-width: 0;
+  max-width: 65%;
+  padding: 10px 18px;
+  background: #1e1e1e;
+  border-top: 2px solid #007acc;
+  border-right: 1px solid #181818;
+}
+.source-editor .source-file-icon {
+  display: inline;
+  margin: 0;
+  color: #dcdcaa;
+  font:
+    600 11px/1.4 Consolas,
+    'Courier New',
+    monospace;
+}
+.source-editor .source-file-tab strong {
+  color: #fff;
+  font:
+    13px/1.6 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  font-weight: 400;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.source-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.source-editor .source-actions button {
+  color: #ccc;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font:
+    12px/1.5 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+.source-editor .source-actions [data-close] {
+  font-size: 24px;
+  line-height: 1;
+  padding: 3px 8px;
+  margin-left: 4px;
+}
+.source-editor .source-actions button:hover {
+  background: #3c3c3c;
+}
+.source-editor .source-actions [aria-pressed='true'] {
+  background: #04395e;
+  border-color: #007acc;
+  color: #fff;
+}
+.source-editor :focus-visible {
+  outline: 1px solid #75beff;
+  outline-offset: -2px;
+}
+.source-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 18px;
+  background: #1e1e1e;
+  color: #aaa;
+  font:
+    12px/1.5 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  border-bottom: 1px solid #2b2b2b;
+}
+.source-breadcrumb > span:first-child {
+  flex: none;
+  color: #858585;
+}
+.source-file-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.source-editor .full-code {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 0 24px;
+  margin: 0;
+  scrollbar-color: #5a5a5a #1e1e1e;
+  font:
+    14px/1.7 Consolas,
+    'Cascadia Code',
+    'SFMono-Regular',
+    Menlo,
+    'Liberation Mono',
+    monospace;
+  font-variant-ligatures: none;
+  tab-size: 4;
+  overscroll-behavior: contain;
+}
+.source-code-lines {
+  min-width: 100%;
+  width: max-content;
+}
+.source-editor .code-line {
+  display: flex;
+  width: 100%;
+  min-height: 1.7em;
+  padding-right: 24px;
+}
+.source-editor .source-line-number {
+  position: sticky;
+  left: 0;
+  flex: 0 0 5.5em;
+  width: 5.5em;
+  padding: 0 1.8em 0 0.8em;
+  text-align: right;
+  color: #858585;
+  background: #1e1e1e;
+  user-select: none;
+  border-left: 2px solid transparent;
+}
+.source-editor .code-line code {
+  white-space: pre;
+  font: inherit;
+  color: #d4d4d4;
+  min-width: 0;
+}
+.source-editor .code-line.highlight {
+  background: #282e36;
+  box-shadow:
+    inset 0 1px #414954,
+    inset 0 -1px #414954;
+}
+.source-editor .code-line.highlight .source-line-number {
+  color: #fff;
+  border-left-color: #75beff;
+  background: #282e36;
+}
+.source-editor.source-wrap .source-code-lines {
+  width: 100%;
+}
+.source-editor.source-wrap .code-line code {
+  flex: 1;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.source-editor code::selection,
+.source-editor code *::selection {
+  background: #264f78;
+  color: #fff;
+}
+.source-message {
+  margin: 0;
+  padding: 12px 22px;
+  color: #bbb;
+  font:
+    13px/1.8 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+}
+.source-statusbar {
+  display: flex;
+  align-items: center;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 5px 14px;
+  color: #fff;
+  background: #007acc;
+  font:
+    11px/1.5 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+}
+.source-statusbar [data-source-position] {
+  margin-right: auto;
+}
+.source-editor .hljs-comment,
+.source-editor .hljs-quote {
+  color: #6a9955;
+}
+.source-editor .hljs-keyword,
+.source-editor .hljs-selector-tag,
+.source-editor .hljs-literal,
+.source-editor .hljs-type {
+  color: #569cd6;
+}
+.source-editor .hljs-string,
+.source-editor .hljs-regexp,
+.source-editor .hljs-template-tag {
+  color: #ce9178;
+}
+.source-editor .hljs-number {
+  color: #b5cea8;
+}
+.source-editor .hljs-title,
+.source-editor .hljs-section {
+  color: #dcdcaa;
+}
+.source-editor .hljs-title.class_,
+.source-editor .hljs-built_in {
+  color: #4ec9b0;
+}
+.source-editor .hljs-variable,
+.source-editor .hljs-attr,
+.source-editor .hljs-attribute,
+.source-editor .hljs-property,
+.source-editor .hljs-symbol {
+  color: #9cdcfe;
+}
+.source-editor .hljs-meta,
+.source-editor .hljs-doctag {
+  color: #c586c0;
+}
+.source-editor .hljs-subst,
+.source-editor .hljs-params,
+.source-editor .hljs-punctuation {
+  color: #d4d4d4;
+}
+.source-editor .hljs-link {
+  color: #ce9178;
+  text-decoration: underline;
+}
+.source-editor .hljs-emphasis {
+  font-style: italic;
+}
+.source-editor .hljs-strong,
+.source-editor .hljs-section {
+  font-weight: 600;
+}
+.source-editor .hljs-addition {
+  color: #b5cea8;
+  background: #283b2b;
+}
+.source-editor .hljs-deletion {
+  color: #ce9178;
+  background: #4b2424;
+}
+@media (max-width: 700px) {
+  dialog.source-editor {
+    width: 98vw;
+    max-width: 98vw;
+    height: 92dvh;
+    max-height: 92dvh;
+    border-radius: 6px;
+  }
+  .source-editor .source-titlebar {
+    gap: 4px;
+    padding-right: 4px;
+  }
+  .source-editor .source-file-tab {
+    flex: 1;
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  .source-editor .source-file-tab strong {
+    font-size: 12px;
+  }
+  .source-editor .source-file-icon {
+    display: none;
+  }
+  .source-editor .source-actions button {
+    padding: 6px;
+  }
+  .source-breadcrumb {
+    padding: 8px 10px;
+  }
+  .source-editor .full-code {
+    font-size: 13px;
+  }
+  .source-editor .source-line-number {
+    flex-basis: 4.5em;
+    width: 4.5em;
+    padding-right: 1em;
+  }
+  .source-statusbar {
+    gap: 5px 12px;
+    padding: 5px 10px;
+  }
+  .source-encoding {
+    display: none;
+  }
+}

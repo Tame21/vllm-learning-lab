@@ -28,7 +28,7 @@ export async function runCommandBrowserRegressions(tab) {
   );
   await page.getByRole('button', { name: '查看源码：TP：分片计算与归并', exact: true }).click();
   check(
-    (await page.locator('.dialog-head strong').innerText()).endsWith('/linear.py'),
+    (await page.locator('.source-file-path').innerText()).endsWith('/linear.py'),
     'TP 应打开 linear.py',
   );
   check(
@@ -51,7 +51,7 @@ export async function runCommandBrowserRegressions(tab) {
   );
   await page.getByRole('button', { name: '查看源码：Model Runner V2', exact: true }).click();
   check(
-    (await page.locator('.dialog-head strong').innerText()).endsWith('/gpu/model_runner.py'),
+    (await page.locator('.source-file-path').innerText()).endsWith('/gpu/model_runner.py'),
     'V2 应打开对应文件',
   );
   check(

@@ -4,7 +4,7 @@
 
 **70 个专题 · 289 个步骤源码定位 · 12 种投机方法 · 启动命令 → 执行流程图**
 
-运行只需要 [Node.js](https://nodejs.org/) 20+ 和 [Git](https://git-scm.com/)。无需 GPU、模型权重、Python 或 npm 运行时依赖。
+运行只需要 [Node.js](https://nodejs.org/) 20+ 和 [Git](https://git-scm.com/)。无需 GPU、模型权重、Python，也无需安装 npm 依赖。
 
 ## 克隆后启动
 
@@ -56,7 +56,7 @@ npm start
 
 ## 按方法学习投机推理
 
-左侧搜索框下方点击“投机推理 · 按方法展开”，或打开 <http://127.0.0.1:4173/#spec-methods>。学习路线和“04 投机解码”分组也提供入口。
+在左侧学习地图的“04 投机解码”分组点击“投机推理方法地图”，或打开 <http://127.0.0.1:4173/#spec-methods>。学习路线也提供入口。
 
 1. 先做共同的“接受 / 拒绝”实验，再进入方法地图。
 2. 按草稿来源筛选 12 个独立方法：N-gram、N-gram GPU、Suffix、Draft Model、EAGLE、EAGLE3、MTP、MLP Speculator、Medusa、PARD、DFlash、DSpark。
@@ -106,6 +106,8 @@ vllm serve Qwen/Qwen3-8B \
 
 ## 源码定位与边界
 
+- 源码弹窗采用 VS Code Dark+ 风格：文件标签、相对路径、固定行号、目标行高亮、自动换行与只读状态栏。Python、CUDA / C++、Rust、JSON、Markdown 等按语言区分关键字、字符串、注释和函数名；多行语法保持上下文。
+- 高亮组件随项目打包，离线可用，不向 CDN 请求资源或上传源码。未知文件类型按纯文本显示。
 - 讲解基准提交：`84030bbe3d74d99bad477a3d2e37a973ccd8865c`。
 - 70 个专题、289 个讲解步骤都有显式定位：231 个实现符号、58 个文档章节，另有 4 个 MRV2 对照定位与 1 个 DSpark 置信度定位。57 篇 `docs/features` 文档均已关联。
 - `source-map.mjs` 和 `spec-methods.mjs` 按步骤指定限定类名 / 函数名、命名注册表或文档章节，可进一步指定范围内的唯一文本。不会把文件第一个函数当作当前步骤实现。
@@ -126,6 +128,9 @@ src/
   content.mjs             主课程与课程注册
   extra-lessons.mjs       扩展专题
   source-map.mjs          逐步骤源码映射与基准版本
+  source-view.mjs         语法高亮、完整行号与源码阅读器
+  source-view.css         VS Code Dark+ 风格的只读源码窗口
+  vendor/highlight.js/    固定版本的本地高亮组件与 BSD 许可证
   spec-methods.mjs        投机方法课程、配置模板与源码锚点
   spec-method-view.mjs    方法地图、对照与各方法专属图解
   spec-method.css         方法专题的响应式布局
@@ -156,7 +161,7 @@ scripts/
  dist/                    生成物；请修改 src 后重新构建
 ```
 
-运行和构建只使用 Node 标准库。存储格式版本为 2，旧的已读进度会迁移，且不会被当成理解题通过。
+服务和构建只使用 Node 标准库；浏览器端高亮组件已随源码打包，无需安装 npm 依赖。存储格式版本为 2，旧的已读进度会迁移，且不会被当成理解题通过。
 
 ## 验证
 
@@ -188,4 +193,4 @@ npm run test:browser
 
 ## 许可证与致谢
 
-工具代码使用 [Apache-2.0](LICENSE)。参考源码来自 [vllm-project/vllm](https://github.com/vllm-project/vllm)，由启动脚本独立获取，保留其版权与许可证；详见 [第三方说明](NOTICE)。该工具是独立学习项目，不是 vLLM 官方产品。
+工具代码使用 [Apache-2.0](LICENSE)。参考源码来自 [vllm-project/vllm](https://github.com/vllm-project/vllm)，由启动脚本独立获取，保留其版权与许可证；高亮组件 [highlight.js](https://github.com/highlightjs/highlight.js) 使用 [BSD-3-Clause](src/vendor/highlight.js/LICENSE)。详见 [第三方说明](NOTICE)。该工具是独立学习项目，不是 vLLM 官方产品。

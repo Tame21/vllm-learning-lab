@@ -1877,34 +1877,6 @@ dialog::backdrop {
   font-size: 28px;
   padding: 0 5px;
 }
-.full-code {
-  overflow: auto;
-  padding: 18px 0;
-  font:
-    12px/1.8 ui-monospace,
-    monospace;
-}
-.code-line {
-  display: flex;
-  min-width: max-content;
-  padding-right: 20px;
-}
-.code-line > span {
-  display: inline-block;
-  text-align: right;
-  color: #697886;
-  padding: 0 20px;
-  min-width: 72px;
-  user-select: none;
-}
-.code-line code {
-  white-space: pre;
-  font: inherit;
-}
-.code-line.highlight {
-  background: #41632c75;
-  color: #e7f4d5;
-}
 .text-dialog {
   padding: 30px;
   line-height: 1.9;
@@ -2424,13 +2396,6 @@ dialog::backdrop {
     padding: 14px;
   }
   .dialog-head strong {
-    font-size: 11px;
-  }
-  .code-line > span {
-    min-width: 48px;
-    padding: 0 12px;
-  }
-  .code-line code {
     font-size: 11px;
   }
 }

@@ -31,7 +31,7 @@ export async function runSpecBrowserRegressions(tab) {
   await page.getByRole('tab', { name: '对应源码', exact: true }).click();
   await page.getByRole('button', { name: '展开源码与行号 ↗', exact: true }).click();
   check(
-    (await page.locator('.dialog-head strong').innerText()).endsWith('/dspark/speculator.py'),
+    (await page.locator('.source-file-path').innerText()).endsWith('/dspark/speculator.py'),
     '应定位 DSpark 实现',
   );
   check(

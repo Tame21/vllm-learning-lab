@@ -13,3 +13,9 @@ The setup script retrieves the upstream commit recorded in src/source-version.mj
 into an ignored local cache. The upstream source is not bundled in this repository.
 Upstream files retain their original copyright and license notices. The source
 reader displays their contents locally without removing those notices.
+
+Syntax highlighting uses highlight.js 11.12.0:
+https://github.com/highlightjs/highlight.js
+Copyright (c) 2006, Ivan Sagalaev. Licensed under the BSD 3-Clause License.
+The unmodified browser module and its license are bundled in
+src/vendor/highlight.js/. No remote CDN is used at runtime.

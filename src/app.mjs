@@ -16,6 +16,7 @@ import { commandView } from './command-view.mjs';
 import { commandSources } from './command-sources.mjs';
 import { specMethods, specCommand } from './spec-methods.mjs';
 import { specMethodsView, specLessonContext } from './spec-method-view.mjs';
+import { sourceReaderShell, renderSource } from './source-view.mjs';
 const app = document.querySelector('#app'),
   dialog = document.querySelector('#source-dialog');
 const ids = lessons.map((l) => l.id);
@@ -245,30 +246,47 @@ function glossary() {
 async function openSource(path, line = 1) {
   pause();
   const epoch = ++sourceEpoch;
-  dialog.innerHTML = `<div class="dialog-head"><div><strong>${esc(path)}</strong><span>本地文件 · 第 ${line} 行</span></div><button data-close aria-label="关闭源码">×</button></div><div class="full-code">正在读取…</div>`;
+  dialog.classList.remove('source-wrap');
+  dialog.classList.add('source-editor');
+  dialog.innerHTML = sourceReaderShell(path);
   if (!dialog.open) dialog.showModal();
   try {
     const r = await fetch('/source/' + path.split('/').map(encodeURIComponent).join('/'));
     if (!r.ok) throw Error('无法读取文件，请确认通过 npm start 启动');
     const text = await r.text();
     if (epoch !== sourceEpoch || !dialog.open) return;
-    dialog.querySelector('.full-code').innerHTML = text
-      .split('\n')
-      .map(
-        (v, n) =>
-          `<div class="code-line ${n + 1 === line ? 'highlight' : ''}" id="line-${n + 1}"><span>${n + 1}</span><code>${esc(v)}</code></div>`,
-      )
-      .join('');
-    dialog.querySelector('.highlight')?.scrollIntoView({ block: 'center' });
+    const source = await renderSource(text, path, line);
+    if (epoch !== sourceEpoch || !dialog.open) return;
+    const code = dialog.querySelector('.full-code');
+    code.innerHTML = source.notice
+      ? `<p class="source-message" role="status">${esc(source.notice)}</p>${source.html}`
+      : source.html;
+    code.setAttribute('aria-busy', 'false');
+    dialog.querySelector('[data-source-position]').textContent =
+      `定位第 ${source.line} 行 · 共 ${source.total} 行`;
+    dialog.querySelector('[data-source-reveal]').disabled = false;
+    dialog.querySelector('.highlight')?.scrollIntoView({ block: 'center', inline: 'nearest' });
   } catch (e) {
-    if (epoch === sourceEpoch && dialog.open)
-      dialog.querySelector('.full-code').textContent = e.message;
+    if (epoch === sourceEpoch && dialog.open) {
+      const code = dialog.querySelector('.full-code');
+      code.innerHTML = `<p class="source-message" role="alert">${esc(e.message)}</p>`;
+      code.setAttribute('aria-busy', 'false');
+      dialog.querySelector('[data-source-position]').textContent = '读取失败';
+    }
   }
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('button,a[data-lesson]');
   if (!b) return;
   if (b.hasAttribute('data-close')) return dialog.close();
+  if (b.hasAttribute('data-source-wrap')) {
+    b.setAttribute('aria-pressed', String(dialog.classList.toggle('source-wrap')));
+    return;
+  }
+  if (b.hasAttribute('data-source-reveal'))
+    return dialog
+      .querySelector('.highlight')
+      ?.scrollIntoView({ block: 'center', inline: 'nearest' });
   if (b.dataset.specFamily) {
     specState.family = b.dataset.specFamily;
     return render();
@@ -598,6 +616,7 @@ window.addEventListener('hashchange', () => {
 
 dialog.addEventListener('close', () => {
   sourceEpoch++;
+  dialog.classList.remove('source-editor', 'source-wrap');
   render();
 });
 
