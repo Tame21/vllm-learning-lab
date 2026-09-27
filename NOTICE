@@ -10,7 +10,7 @@ Copyright the vLLM contributors. Licensed under Apache License 2.0 and any
 additional notices attached to individual upstream files.
 
 The setup script retrieves the upstream commit recorded in src/source-version.mjs
-into an ignored local cache. The upstream source is not bundled in this repository.
+into an ignored local cache. The upstream checkout is not bundled in this repository.
 Upstream files retain their original copyright and license notices. The source
 reader displays their contents locally without removing those notices.
 
@@ -19,3 +19,16 @@ https://github.com/highlightjs/highlight.js
 Copyright (c) 2006, Ivan Sagalaev. Licensed under the BSD 3-Clause License.
 The unmodified browser module and its license are bundled in
 src/vendor/highlight.js/. No remote CDN is used at runtime.
+
+The N-gram KMP control logic in src/engines/algorithms.mjs is adapted from
+vllm/v1/spec_decode/ngram_proposer.py at the pinned upstream commit.
+Copyright contributors to the vLLM project; Apache License 2.0.
+Other algorithm chapters are teaching implementations referencing the symbols
+listed in docs/ALGORITHMS.md, not executable GPU kernels.
+
+Foundation lessons are independently authored mathematical teaching examples.
+Their vLLM references identify applications or comparisons, not implementations
+of every illustrated formula. Diffusion background references Ho et al.,
+"Denoising Diffusion Probabilistic Models" (2020), arXiv:2006.11239, and
+Austin et al., "Structured Denoising Diffusion Models in Discrete State-Spaces"
+(2021), arXiv:2107.03006. No paper figures or model weights are bundled.

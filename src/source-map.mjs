@@ -73,7 +73,7 @@ const anchors = {
   preemption: [
     [kv, 'KVCacheManager.allocate_slots'],
     [0, 'Scheduler._preempt_request'],
-    [0, 'Scheduler._preempt_request', 'request.num_computed_tokens = 0'],
+    [0, 'Scheduler.schedule'],
     [0, 'Scheduler.finish_requests'],
   ],
   priority: [
@@ -86,7 +86,7 @@ const anchors = {
     [0, 'KVCacheSpec'],
     [0, 'KVCacheGroupSpec'],
     [1, 'SlidingWindowManager.get_num_skipped_tokens'],
-    [2, '## Prefix caching'],
+    [1, 'SingleTypeKVCacheManager.remove_skipped_blocks'],
   ],
   runner: [
     [0, 'GPUModelRunner.execute_model'],
@@ -128,7 +128,7 @@ const anchors = {
     [0, 'BeamSearchOfflineMixin.beam_search'],
     [0, 'BeamSearchOfflineMixin._beam_search_step'],
     [0, 'BeamSearchOfflineMixin._beam_search_step'],
-    [1, 'ParentRequest.get_outputs'],
+    [0, 'BeamSearchOfflineMixin.beam_search', 'best_beams = sorted_completed[:beam_width]'],
   ],
   compile: [
     [1, '### 1. Dynamo Tracing'],

@@ -6,6 +6,8 @@ export async function runCommandBrowserRegressions(tab) {
     if (!condition) throw Error(message);
   };
   const analyze = async (command) => {
+    await page.getByLabel('vLLM 启动命令', { exact: true }).press('ControlOrMeta+A');
+    await page.getByLabel('vLLM 启动命令', { exact: true }).press('Backspace');
     await page.getByLabel('vLLM 启动命令', { exact: true }).fill(command);
     await page.getByRole('button', { name: '生成流程图', exact: true }).click();
   };

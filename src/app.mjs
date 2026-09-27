@@ -4,7 +4,10 @@ import { loadStudy, saveStudy, decodeRoute, encodeRoute } from './study-state.mj
 import { challengeFor } from './learning.mjs';
 import { learningContext, quizView, pathView } from './learning-view.mjs';
 import { createTraceCache, executableIds } from './engine.mjs';
+import { mechanismIds } from './mechanism-parameters.mjs';
+import { algorithmCatalogView, algorithmIntro, algorithmNotes } from './algorithm-view.mjs';
 import { comparisonView } from './experiment-view.mjs';
+import { foundationCatalogView, foundationIntro } from './foundation-view.mjs';
 import { exampleRequests } from './engines/scheduler.mjs';
 import { groups, lessons } from './content.mjs';
 import { defaults, validateParameters, stageFor } from './simulations.mjs';
@@ -17,6 +20,7 @@ import { commandSources } from './command-sources.mjs';
 import { specMethods, specCommand } from './spec-methods.mjs';
 import { specMethodsView, specLessonContext } from './spec-method-view.mjs';
 import { sourceReaderShell, renderSource } from './source-view.mjs';
+import { prepareEditorLink } from './source-editor.mjs';
 const app = document.querySelector('#app'),
   dialog = document.querySelector('#source-dialog');
 const ids = lessons.map((l) => l.id);
@@ -32,7 +36,15 @@ try {
   };
 }
 const study = loadStudy(storage, ids);
-const toolViews = ['command', 'path', 'coverage', 'glossary', 'spec-methods'];
+const toolViews = [
+  'command',
+  'path',
+  'coverage',
+  'glossary',
+  'spec-methods',
+  'algorithms',
+  'foundations',
+];
 const specState = { family: 'all', compare: ['eagle', 'eagle3'] };
 const commandState = {
   draft: commandExamples[0].command,
@@ -72,7 +84,20 @@ const frames = () => traceCache(lesson, options).trace;
 const stage = () => {
   const f = frames()[index],
     s = stageFor(lesson, f?.stepIndex ?? index, options);
-  return executableIds.includes(lesson.id) ? { ...s, change: f.events.join(' ') } : s;
+  return executableIds.includes(lesson.id)
+    ? {
+        ...s,
+        title: ['algorithm', 'foundation'].includes(lesson.kind) ? (f.title ?? s.title) : s.title,
+        body: ['algorithm', 'foundation'].includes(lesson.kind) ? (f.body ?? s.body) : s.body,
+        source: f.source
+          ? {
+              ...f.source,
+              observe: lesson.kind === 'foundation' ? lesson.codeNote : f.events.join(' '),
+            }
+          : s.source,
+        change: f.events.join(' '),
+      }
+    : s;
 };
 const key = sourceKey;
 const icon = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m7 10 8 14L25 7M17 7h8v8"/></svg>`;
@@ -150,14 +175,14 @@ function render() {
            `${l.title} ${l.english} ${l.summary}`.toLowerCase().includes(query.toLowerCase()),
        );
        return matches.length
-         ? `<div class="nav-group"><div class="group-label"><span>${g[1]}</span>${g[2]}</div>${g[0] === 'spec' ? `<button data-view="spec-methods" class="nav-item ${view === 'spec-methods' ? 'selected' : ''}" ${view === 'spec-methods' ? 'aria-current="page"' : ''}><span class="nav-dot" aria-hidden="true"></span>投机推理方法地图</button>` : ''}${matches.map((l) => `<button data-lesson="${l.id}" class="nav-item ${view === 'lab' && l.id === lesson.id ? 'selected' : ''}"><span class="nav-dot ${completed.includes(l.id) ? 'complete' : ''}">${completed.includes(l.id) ? '✓' : ''}</span>${l.title}</button>`).join('')}</div>`
+         ? `<div class="nav-group"><div class="group-label"><span>${g[1]}</span>${g[2]}</div>${g[0] === 'spec' ? `<button data-view="spec-methods" class="nav-item ${view === 'spec-methods' ? 'selected' : ''}" ${view === 'spec-methods' ? 'aria-current="page"' : ''}><span class="nav-dot" aria-hidden="true"></span>投机推理方法地图</button>` : ''}${g[0] === 'foundations' ? `<button data-view="foundations" class="nav-item ${view === 'foundations' ? 'selected' : ''}" ${view === 'foundations' ? 'aria-current="page"' : ''}><span class="nav-dot"></span>前置基础 · 目录与学习顺序</button>` : ''}${g[0] === 'algorithms' ? `<button data-view="algorithms" class="nav-item ${view === 'algorithms' ? 'selected' : ''}" ${view === 'algorithms' ? 'aria-current="page"' : ''}><span class="nav-dot"></span>全部算法 · 目录与顺序</button>` : ''}${matches.map((l) => `<button data-lesson="${l.id}" class="nav-item ${view === 'lab' && l.id === lesson.id ? 'selected' : ''}"><span class="nav-dot ${completed.includes(l.id) ? 'complete' : ''}">${completed.includes(l.id) ? '✓' : ''}</span>${l.title}</button>`).join('')}</div>`
          : '';
      })
      .join('') || '<p class="empty">没有匹配的专题</p>'
  }</nav>
  <div class="learning-progress"><div><span>已读进度</span><strong>${completed.length} / ${lessons.length}</strong></div><div class="meter"><i style="width:${(completed.length / lessons.length) * 100}%"></i></div><small>${Object.values(study.quiz).filter((q) => q.passed).length} 道理解题通过 · ${saveAvailable ? '本机保存' : '存储不可用'}</small></div></aside>
- <div class="main-shell"><header class="topbar"><div class="breadcrumb">学习实验室 <span>/</span> ${view === 'lab' ? group[2] : view === 'command' ? '启动命令' : view === 'coverage' ? '特性全景' : view === 'path' ? '学习路线' : view === 'spec-methods' ? '投机方法地图' : '术语手册'}</div><nav aria-label="工具视图"><button data-view="path" class="${view === 'path' ? 'active' : ''}">学习路线</button><button data-view="lab" class="${view === 'lab' ? 'active' : ''}">实验室</button><button data-view="command" class="${view === 'command' ? 'active' : ''}">启动命令</button><button data-view="coverage" class="${view === 'coverage' ? 'active' : ''}">特性全景</button><button data-view="glossary" class="${view === 'glossary' ? 'active' : ''}">术语手册</button></nav><span class="revision" title="${esc(data.commit)}">源码 ${data.commit.slice(0, 10)}</span></header>
- <main>${view === 'lab' ? laboratory() : view === 'command' ? commandView(commandState, data) : view === 'coverage' ? coverage() : view === 'path' ? pathView(lessons, study) : view === 'spec-methods' ? specMethodsView(specState, study) : glossary()}</main><footer><span>基于本地 vLLM V1 源码 · 中文教学模拟</span><span>不运行模型 · 不需要 GPU · 数值不是硬件实测</span></footer></div>`,
+ <div class="main-shell"><header class="topbar"><div class="breadcrumb">学习实验室 <span>/</span> ${view === 'lab' ? group[2] : view === 'command' ? '启动命令' : view === 'coverage' ? '特性全景' : view === 'path' ? '学习路线' : view === 'spec-methods' ? '投机方法地图' : view === 'foundations' ? '前置基础' : view === 'algorithms' ? '算法专题' : '术语手册'}</div><nav aria-label="工具视图"><button data-view="foundations" class="${view === 'foundations' ? 'active' : ''}">前置基础</button><button data-view="algorithms" class="${view === 'algorithms' ? 'active' : ''}">算法专题</button><button data-view="path" class="${view === 'path' ? 'active' : ''}">学习路线</button><button data-view="lab" class="${view === 'lab' ? 'active' : ''}">实验室</button><button data-view="command" class="${view === 'command' ? 'active' : ''}">启动命令</button><button data-view="coverage" class="${view === 'coverage' ? 'active' : ''}">特性全景</button><button data-view="glossary" class="${view === 'glossary' ? 'active' : ''}">术语手册</button></nav><span class="revision" title="${esc(data.commit)}">源码 ${data.commit.slice(0, 10)}</span></header>
+ <main>${view === 'lab' ? laboratory() : view === 'command' ? commandView(commandState, data) : view === 'coverage' ? coverage() : view === 'path' ? pathView(lessons, study) : view === 'spec-methods' ? specMethodsView(specState, study) : view === 'foundations' ? foundationCatalogView(query, study) : view === 'algorithms' ? algorithmCatalogView(query, study) : glossary()}</main><footer><span>基于本地 vLLM V1 源码 · 中文教学模拟</span><span>不运行模型 · 不需要 GPU · 数值不是硬件实测</span></footer></div>`,
   );
   document.querySelector('.lesson-nav').scrollTop = navScroll;
 }
@@ -165,9 +190,9 @@ function laboratory() {
   const f = frames(),
     s = stage();
   return `<div class="lesson-heading"><div><div class="eyebrow">${esc(lesson.english)}</div><h1>${esc(lesson.title)}</h1><p>${esc(lesson.summary)}</p></div><div class="lesson-actions"><button class="quiet-button ${completed.includes(lesson.id) ? 'done' : ''}" data-action="complete">${completed.includes(lesson.id) ? '✓ 已读' : '○ 标记已读'}</button><button class="quiet-button" data-action="bookmark">${study.bookmarks.includes(lesson.id) ? '★ 已收藏' : '☆ 收藏'}</button><button class="quiet-button" data-action="share">实验链接 ↗</button></div></div>
- ${routeWarning ? `<p class="notice">${esc(routeWarning)}，已恢复安全的默认页面。</p>` : ''}${learningContext(lesson, lessons, terms)}${specLessonContext(lesson)}
+ ${routeWarning ? `<p class="notice">${esc(routeWarning)}，已恢复安全的默认页面。</p>` : ''}${learningContext(lesson, lessons, terms)}${specLessonContext(lesson)}${algorithmIntro(lesson)}${foundationIntro(lesson)}
  ${focusedDoc ? `<div class="variant-banner"><div><span class="badge">${esc(focusedDoc.level)}</span><strong>${esc(focusedDoc.title)}</strong><p>${esc(focusedDoc.note)}</p></div><button data-source="${esc(focusedDoc.path)}">阅读具体变体文档 ↗</button></div>` : ''}
- <div class="lab-layout"><section class="experiment" aria-label="执行过程可视化"><div class="experiment-toolbar"><div><span class="live-symbol">◈</span><strong>执行观察窗</strong><span class="badge">教学模拟</span></div><div class="toolbar-actions"><button data-action="play" aria-label="${timer ? '暂停动画' : '播放动画'}">${timer ? 'Ⅱ' : '▶'}</button><button data-action="next" aria-label="从观察窗前进一步" ${index === f.length - 1 ? 'disabled' : ''}>单步 →</button><span class="step-indicator">${String(index + 1).padStart(2, '0')} <small>/ ${String(f.length).padStart(2, '0')}</small></span></div></div>
+ <div class="lab-layout"><section class="experiment" aria-label="执行过程可视化"><div class="experiment-toolbar"><div><span class="live-symbol">◈</span><strong>${executableIds.includes(lesson.id) ? '执行观察窗' : lesson.kind === 'flow' ? '流程概览' : '机制图解'}</strong><span class="badge">教学模拟</span></div><div class="toolbar-actions"><button data-action="play" aria-label="${timer ? '暂停动画' : '播放动画'}">${timer ? 'Ⅱ' : '▶'}</button><button data-action="next" aria-label="从观察窗前进一步" ${index === f.length - 1 ? 'disabled' : ''}>单步 →</button><span class="step-indicator">${String(index + 1).padStart(2, '0')} <small>/ ${String(f.length).padStart(2, '0')}</small></span></div></div>
  <div class="scene" id="scene">${scene(lesson, index, options, f)}</div>
  <div class="playback"><div class="playback-buttons"><button class="icon-button" data-action="reset" aria-label="重置">↺</button><button class="icon-button" data-action="prev" aria-label="上一步" ${index === 0 ? 'disabled' : ''}>‹</button><button class="play-button" data-action="play">${timer ? 'Ⅱ 暂停' : '▶ 播放'}</button><button class="icon-button" data-action="next" aria-label="下一步" ${index === f.length - 1 ? 'disabled' : ''}>›</button></div><input aria-label="执行时间轴" type="range" min="0" max="${f.length - 1}" value="${index}" id="scrubber"><select id="speed" aria-label="播放速度">${[0.5, 1, 2].map((v) => `<option ${speed === v ? 'selected' : ''} value="${v}">${v}×</option>`).join('')}</select></div>
  <div class="settings"><div class="settings-title"><strong>${lesson.kind === 'spec-method' ? '按步骤观察' : '动手改一改'}</strong><small>${lesson.kind === 'spec-method' ? '对照输入、依赖和源码' : '调整参数后从头演示'}</small></div>${controls(lesson, options)}<p id="parameter-error" role="alert"></p></div>${comparisonView(lesson, traceCache(lesson, options).comparison, f, options)}</section>
@@ -182,8 +207,8 @@ function laboratory() {
    )
    .join(
      '',
-   )}</div><div class="detail-body" aria-live="polite">${tab === 'source' ? sourcePanel() : tab === 'quiz' ? quiz() : `<span class="eyebrow">${lesson.kind === 'scheduler' ? '本轮发生了什么' : 'WHY & HOW'}</span><h2>${lesson.kind === 'scheduler' ? `第 ${index + 1} 轮调度` : esc(s.title)}</h2>${executableIds.includes(lesson.id) ? `<ol class="event-list">${f[index].events.map((e) => `<li>${esc(e)}</li>`).join('') || '<li>请求继续计算已调度的 token。</li>'}</ol>` : `<p>${esc(s.body)}</p>`}<div class="analogy"><span>换个角度理解</span><p>${esc(lesson.analogy)}</p></div><div class="watch"><span>观察重点</span><p>${lesson.kind === 'scheduler' ? '浅色是待计算 prompt，蓝色是已计算位置，绿色是已经生成的输出；P、D 是新位置计算，R 是抢占后的历史 KV 重算。' : esc(s.change)}</p></div><button class="source-jump" data-tab="source">定位这一步的源码 <span>↗</span></button>`}</div></aside></div>
- <div class="below-lab"><section class="steps-section"><div class="section-heading"><h2>理解这条执行链</h2><span>${lesson.steps.length} 个关键环节</span></div><div class="step-list">${lesson.steps.map((s, n) => `<button data-${executableIds.includes(lesson.id) ? 'explain-step' : 'step'}="${n}" class="${n === (f[index]?.stepIndex ?? index) ? 'active' : ''}"><span>${String(n + 1).padStart(2, '0')}</span><div><b>${esc(s.title)}</b><small>${esc(s.change)}</small></div><span>↗</span></button>`).join('')}</div></section><section class="source-summary"><span class="eyebrow">READ THE IMPLEMENTATION</span><h2>带着问题回到源码</h2><p>右侧“对应源码”定位当前步骤。下方为相关参考文件，可继续查阅真实分支与平台约束。</p>${lesson.refs.map((r, n) => `<button class="file-link" data-ref="${n}"><span>⌘</span><div><b>${esc(r.path.split('/').at(-1))}</b><small>${esc(r.path)}</small></div><span>↗</span></button>`).join('')}<div class="next-lesson"><button data-action="next-lesson">继续下一个专题 →</button></div></section></div>`;
+   )}</div><div class="detail-body" aria-live="polite">${tab === 'source' ? sourcePanel() : tab === 'quiz' ? quiz() : `<span class="eyebrow">${lesson.kind === 'scheduler' ? '本轮发生了什么' : 'WHY & HOW'}</span><h2>${lesson.kind === 'scheduler' ? `第 ${index + 1} 轮调度` : esc(s.title)}</h2>${executableIds.includes(lesson.id) ? `${mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? `<p>${esc(s.body)}</p>` : ''}<ol class="event-list">${f[index].events.map((e) => `<li>${esc(e)}</li>`).join('') || '<li>请求继续计算已调度的 token。</li>'}</ol>` : `<p>${esc(s.body)}</p>`}<div class="analogy"><span>换个角度理解</span><p>${esc(lesson.analogy)}</p></div><div class="watch"><span>观察重点</span><p>${lesson.kind === 'scheduler' ? '浅色是待计算 prompt，蓝色是已计算位置，绿色是已经生成的输出；P、D 是新位置计算，R 是抢占后的历史 KV 重算。' : esc(f[index].body ?? (mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? lesson.steps[f[index].stepIndex].change : s.change))}</p></div><button class="source-jump" data-tab="source">${lesson.kind === 'foundation' ? '看概念的源码应用' : '定位这一步的源码'} <span>↗</span></button>`}</div></aside></div>
+ ${algorithmNotes(lesson, lessons)}<div class="below-lab"><section class="steps-section"><div class="section-heading"><h2>理解这条执行链</h2><span>${lesson.steps.length} 个关键环节</span></div><div class="step-list">${lesson.steps.map((s, n) => `<button data-${(mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind)) && f.some((frame) => frame.stepIndex === n) ? 'scene-stage' : executableIds.includes(lesson.id) ? 'explain-step' : 'step'}="${n}" class="${n === (f[index]?.stepIndex ?? index) ? 'active' : ''}"><span>${String(n + 1).padStart(2, '0')}</span><div><b>${esc(s.title)}</b><small>${esc(s.change)}</small></div><span>↗</span></button>`).join('')}</div></section><section class="source-summary"><span class="eyebrow">READ THE IMPLEMENTATION</span><h2>带着问题回到源码</h2><p>${lesson.kind === 'foundation' ? '以下源码是概念的应用或对照位置。数学玩具例子独立计算，不代表这些文件实现了本课所有公式。' : '右侧“对应源码”定位当前步骤。下方为相关参考文件，可继续查阅真实分支与平台约束。'}</p>${lesson.refs.map((r, n) => `<button class="file-link" data-ref="${n}"><span>⌘</span><div><b>${esc(r.path.split('/').at(-1))}</b><small>${esc(r.path)}</small></div><span>↗</span></button>`).join('')}<div class="next-lesson"><button data-action="next-lesson">继续下一个专题 →</button></div></section></div>`;
 }
 function currentSources() {
   const s = lesson.kind === 'scheduler' ? lesson.steps[1] : stage();
@@ -203,7 +228,7 @@ function sourcePanel() {
   return currentSources()
     .map((r, n) => {
       const ref = data.refs[key(r)];
-      return `<article class="source-anchor"><span class="eyebrow">${ref.kind === 'documentation' ? '设计文档中的机制说明' : lesson.id === 'runner' ? (n ? 'MRV2 实现路径' : 'MRV1 实现路径') : n ? '本轮相关实现' : '当前步骤的实现路径'}</span><h2>${esc(ref.symbol)}</h2><p class="code-path">${esc(r.path)}:${ref.line} · 范围 ${ref.rangeStart}–${ref.rangeEnd}</p><p>观察：${esc(r.observe)}</p><pre class="code-preview"><code>${esc(ref.code)}</code></pre><button class="primary-outline" data-step-source="${n}">展开源码与行号 ↗</button><p class="small-note">${ref.review === 'baseline' ? '该文件与讲解基准一致' : ref.review === 'stale' ? '文件已变更：锚点仍可定位，讲解待复核' : '无法确认版本：讲解待复核'} · 基准 ${data.reviewedCommit.slice(0, 10)}</p></article>`;
+      return `<article class="source-anchor"><span class="eyebrow">${lesson.kind === 'foundation' ? '概念在 vLLM 中的参考位置' : ref.kind === 'documentation' ? '设计文档中的机制说明' : lesson.id === 'runner' ? (n ? 'MRV2 实现路径' : 'MRV1 实现路径') : n ? '本轮相关实现' : '当前步骤的实现路径'}</span><h2>${esc(ref.symbol)}</h2><p class="code-path">${esc(r.path)}:${ref.line} · 范围 ${ref.rangeStart}–${ref.rangeEnd}</p><p class="${lesson.kind === 'foundation' ? 'foundation-source-note' : ''}">${lesson.kind === 'foundation' ? '应用说明' : '观察'}：${esc(r.observe)}</p><pre class="code-preview"><code>${esc(ref.code)}</code></pre><button class="primary-outline" data-step-source="${n}">展开源码与行号 ↗</button><p class="small-note">${ref.review === 'baseline' ? '该文件与讲解基准一致' : ref.review === 'stale' ? '文件已变更：锚点仍可定位，讲解待复核' : '无法确认版本：讲解待复核'} · 基准 ${data.reviewedCommit.slice(0, 10)}</p></article>`;
     })
     .join('');
 }
@@ -221,7 +246,7 @@ function quiz() {
 function coverage() {
   const matches = (s) => s.toLowerCase().includes(query.toLowerCase());
   const docs = data.docs.filter((d) => matches(`${d.title} ${d.path} ${d.note}`));
-  return `<div class="lesson-heading"><div><div class="eyebrow">FEATURE ATLAS</div><h1>特性全景</h1><p>机制动画、后端变体与外部插件分别标明。左侧搜索同时筛选下方文档和实现目录。</p></div><span class="badge">${data.docs.length} 篇特性文档</span></div><div class="coverage-intro"><strong>${lessons.length} 个机制专题</strong><span>${executableIds.length} 个状态推演专题 · ${lessons.filter((l) => l.kind === 'flow').length} 个流程概览</span><span>源码版本 ${data.commit.slice(0, 10)}</span></div><p class="coverage-boundary">可计算实验展示简化的状态变化；流程动画展示执行主链。后端变体可跳转到共享机制和专属文档，未逐个复现所有模型、硬件 kernel 或外部库内部行为。下方文件目录也不等于支持能力清单。</p><div class="atlas-grid">${groups
+  return `<div class="lesson-heading"><div><div class="eyebrow">FEATURE ATLAS</div><h1>特性全景</h1><p>机制动画、后端变体与外部插件分别标明。左侧搜索同时筛选下方文档和实现目录。</p></div><span class="badge">${data.docs.length} 篇特性文档</span></div><div class="coverage-intro"><strong>${lessons.length} 个学习专题</strong><span>${executableIds.length} 个状态推演专题 · ${lessons.filter((l) => l.kind === 'flow' && !executableIds.includes(l.id)).length} 个流程概览</span><span>源码版本 ${data.commit.slice(0, 10)}</span></div><p class="coverage-boundary">可计算实验展示简化的状态变化；流程动画展示执行主链。后端变体可跳转到共享机制和专属文档，未逐个复现所有模型、硬件 kernel 或外部库内部行为。下方文件目录也不等于支持能力清单。</p><div class="atlas-grid">${groups
     .map((g) => {
       const items = lessons.filter(
         (l) => l.group === g[0] && matches(`${l.title} ${l.english} ${l.summary}`),
@@ -266,6 +291,7 @@ async function openSource(path, line = 1) {
       `定位第 ${source.line} 行 · 共 ${source.total} 行`;
     dialog.querySelector('[data-source-reveal]').disabled = false;
     dialog.querySelector('.highlight')?.scrollIntoView({ block: 'center', inline: 'nearest' });
+    void prepareEditorLink(dialog, path, source.line, () => epoch === sourceEpoch && dialog.open);
   } catch (e) {
     if (epoch === sourceEpoch && dialog.open) {
       const code = dialog.querySelector('.full-code');
@@ -374,14 +400,27 @@ document.addEventListener('click', (e) => {
       view === 'lab' ? encodeRoute(lesson.id, options, index, tab) : `#${view}`,
     );
     render();
-    if (view === 'spec-methods') document.querySelector('main').scrollIntoView({ block: 'start' });
+    if (['spec-methods', 'algorithms', 'foundations'].includes(view))
+      document.querySelector('main').scrollIntoView({ block: 'start' });
     return;
   }
   if (b.dataset.tab) {
     tab = b.dataset.tab;
     return render();
   }
-  if (b.dataset.step !== undefined) return jump(b.dataset.step);
+  if (b.dataset.step !== undefined) {
+    pause();
+    return jump(b.dataset.step);
+  }
+  if (b.dataset.sceneStage !== undefined) {
+    const target = frames().findIndex((f) => f.stepIndex === Number(b.dataset.sceneStage));
+    if (target >= 0) {
+      pause();
+      jump(target);
+      document.querySelector('.experiment').scrollIntoView({ block: 'start' });
+      return;
+    }
+  }
   if (b.dataset.answer !== undefined) {
     answer = Number(b.dataset.answer);
     study.quiz[lesson.id] = {
@@ -412,7 +451,7 @@ document.addEventListener('click', (e) => {
   }
   if (b.dataset.explainStep !== undefined) {
     const s = lesson.steps[Number(b.dataset.explainStep)];
-    dialog.innerHTML = `<div class="dialog-head"><strong>${esc(s.title)}</strong><button data-close aria-label="关闭说明">×</button></div><div class="text-dialog"><p>${esc(s.body)}</p><code>${esc(s.change)}</code><p><button class="quiet-button" data-curriculum-source="${b.dataset.explainStep}">阅读这个环节的源码 ↗</button></p></div>`;
+    dialog.innerHTML = `<div class="dialog-head"><strong>${esc(s.title)}</strong><button data-close aria-label="关闭说明">×</button></div><div class="text-dialog">${mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? '<p class="small-note">当前参数未触发这个环节。这里展示机制说明，可调整参数后再观察。</p>' : ''}<p>${esc(s.body)}</p><code>${esc(s.change)}</code><p><button class="quiet-button" data-curriculum-source="${b.dataset.explainStep}">阅读这个环节的源码 ↗</button></p></div>`;
     pause();
     return dialog.showModal();
   }
@@ -515,6 +554,7 @@ function updateOptions(input) {
   try {
     applyOptions(input);
   } catch (e) {
+    render();
     const error = document.querySelector('#parameter-error');
     if (error) error.textContent = e.message;
   }

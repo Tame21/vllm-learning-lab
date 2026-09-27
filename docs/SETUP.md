@@ -37,6 +37,18 @@ npm start
 
 恢复自动缓存：macOS / Linux 使用 `unset VLLM_SOURCE_DIR`；PowerShell 使用 `Remove-Item Env:VLLM_SOURCE_DIR`。
 
+## 在 VS Code 中打开源码
+
+打开任意源码或参考文档后，点击窗口右上角 **“在 VS Code 中打开”**。工具使用 VS Code 官方的 [文件与行列 URL 协议](https://code.visualstudio.com/docs/configure/command-line#_opening-vs-code-with-urls)，目标行与网页里的高亮行一致。无需安装本工具专用的 VS Code 扩展，也无需配置 `code` 命令的 PATH。
+
+本机需安装 VS Code 稳定版并注册 `vscode://` 协议。首次点击时，浏览器可能要求允许打开外部应用；选择 VS Code 即可。某些内嵌浏览器会限制外部协议，可以改用系统浏览器访问本机学习页面。
+
+备用方式：点击“复制文件定位”，切换到 VS Code，按 `Ctrl+P`（macOS 为 `⌘+P`），粘贴并回车。若浏览器拒绝写入剪贴板，工具会显示并选中定位内容，手动复制即可。复制的是本机绝对文件位置与行列，不是分享链接。
+
+如果按钮一直不可用，并提示定位服务不可用，先在启动终端 `Ctrl+C`，重新 `npm start`，刷新页面后再打开源码。本功能包含服务端接口更新，旧的常驻服务仅构建前端还不够。
+
+位置来自当前使用的参考源码：默认是项目缓存，也可以是 `VLLM_SOURCE_DIR`。浏览器、服务和 VS Code 应位于同一台机器；本功能不自动转换 SSH、WSL、容器或远端文件系统路径。打开的就是这份参考代码，保存修改会改变它；需要编辑研究时，建议使用自己维护的源码副本并通过 `VLLM_SOURCE_DIR` 指定。
+
 ## 常见问题
 
 | 现象                            | 处理                                                                                                             |

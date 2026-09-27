@@ -2,8 +2,25 @@ import { scheduleTrace, scheduleMetrics } from './engines/scheduler.mjs';
 import { cacheTrace, grammarTrace } from './engines/cache.mjs';
 import { speculativeTrace } from './engines/speculative.mjs';
 import { tensorParallelTrace, pipelineTrace, moeTrace } from './engines/parallel.mjs';
+import { mechanismIds } from './mechanism-parameters.mjs';
+import {
+  lifecycleTrace,
+  runnerTrace,
+  asyncTrace,
+  hybridTrace,
+  beamTrace,
+  dynamicSpecTrace,
+} from './engines/mechanisms.mjs';
+import { queueMechanismTrace } from './engines/queue-mechanisms.mjs';
+import { algorithmIds } from './algorithm-catalog.mjs';
+import { algorithmTrace } from './engines/algorithms.mjs';
+import { foundationIds } from './foundation-catalog.mjs';
+import { foundationTrace } from './engines/foundations.mjs';
 
 export const executableIds = [
+  ...foundationIds,
+  ...algorithmIds,
+  ...mechanismIds,
   'scheduler',
   'chunked',
   'paged',
@@ -15,6 +32,19 @@ export const executableIds = [
   'moe',
 ];
 export function buildTrace(lesson, options) {
+  if (lesson.kind === 'foundation') return foundationTrace(lesson, options);
+  if (lesson.kind === 'algorithm') return algorithmTrace(lesson, options);
+  const mechanisms = {
+    lifecycle: lifecycleTrace,
+    runner: runnerTrace,
+    async: asyncTrace,
+    hybrid: hybridTrace,
+    beam: beamTrace,
+    'dynamic-spec': dynamicSpecTrace,
+  };
+  if (Object.hasOwn(mechanisms, lesson.id)) return mechanisms[lesson.id](options);
+  if (['preemption', 'priority'].includes(lesson.id))
+    return queueMechanismTrace(lesson.id, options);
   if (lesson.kind === 'scheduler') return scheduleTrace(options);
   if (lesson.kind === 'cache' || lesson.kind === 'prefix')
     return cacheTrace(lesson.kind === 'prefix', options);

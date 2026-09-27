@@ -2,6 +2,9 @@ import { esc } from './html.mjs';
 import { learningPaths, prerequisites } from './learning.mjs';
 import { executableIds } from './engine.mjs';
 import { specEntry } from './spec-method-view.mjs';
+import { algorithmEntry } from './algorithm-view.mjs';
+import { foundationEntry } from './foundation-view.mjs';
+import { foundationNeeds } from './foundation-catalog.mjs';
 
 export function learningContext(lesson, lessons, terms) {
   const names = {
@@ -16,9 +19,26 @@ export function learningContext(lesson, lessons, terms) {
     paged: ['Block / Page', 'Block table'],
     structured: ['Token', 'Logits'],
   };
-  const selected = names[lesson.id] || ['Token'];
-  return `<div class="learning-context"><span class="badge">${executableIds.includes(lesson.id) ? '可推演实验' : '机制讲解'}</span><span>建议先学</span>${
-    (prerequisites[lesson.id] || (lesson.kind === 'spec-method' ? ['speculative'] : ['lifecycle']))
+  const selected =
+    names[lesson.id] ||
+    (lesson.kind === 'foundation'
+      ? {
+          math: ['张量'],
+          probability: ['随机变量', '概率分布'],
+          models: ['Token', '张量'],
+          generation: ['扩散模型', '条件概率'],
+        }[lesson.family]
+      : ['Token']);
+  const required = [
+    ...new Set([
+      ...(foundationNeeds[lesson.id] || []),
+      ...(lesson.prerequisites ||
+        prerequisites[lesson.id] ||
+        (lesson.kind === 'spec-method' ? ['speculative'] : ['lifecycle'])),
+    ]),
+  ];
+  return `<div class="learning-context"><span class="badge">${executableIds.includes(lesson.id) ? '可推演实验' : lesson.kind === 'flow' ? '流程概览' : '专用图解'}</span><span>建议先学</span>${
+    required
       .filter((id) => id !== lesson.id)
       .map(
         (id) =>
@@ -41,5 +61,5 @@ export function pathView(lessons, study) {
     return `<button data-lesson="${id}"><span>${study.quiz[id]?.passed ? '✓' : study.completed.includes(id) ? '◐' : '○'}</span><div><b>${esc(l.title)}</b><small>${study.quiz[id]?.passed ? '理解题通过' : study.quiz[id] ? '理解题待复习' : study.completed.includes(id) ? '已读，待验证' : '开始学习'}</small></div><span>→</span></button>`;
   };
   const wrong = Object.keys(study.quiz).filter((id) => !study.quiz[id].passed);
-  return `<div class="lesson-heading"><div><div class="eyebrow">YOUR LEARNING PATH</div><h1>从看懂，到自己推演</h1><p>先预测，再运行，最后用源码解释。已读进度与理解题成绩分别记录。</p></div></div><div class="path-summary"><b>${study.completed.length} 个专题已读</b><b>${Object.values(study.quiz).filter((q) => q.passed).length} 道理解题通过</b><b>${wrong.length} 道待复习</b></div>${specEntry()}<div class="path-grid">${learningPaths.map((p, n) => `<section class="path-card"><span class="eyebrow">路线 0${n + 1}</span><h2>${p.title}</h2><p>${p.description}</p>${p.ids.map(tile).join('')}</section>`).join('')}</div><div class="path-grid secondary-paths"><section class="path-card"><h2>待复习</h2>${wrong.map(tile).join('') || '<p>答错的理解题会出现在这里。</p>'}</section><section class="path-card"><h2>我的收藏</h2>${study.bookmarks.map(tile).join('') || '<p>用专题标题旁的收藏按钮建立自己的学习清单。</p>'}</section></div>`;
+  return `<div class="lesson-heading"><div><div class="eyebrow">YOUR LEARNING PATH</div><h1>从看懂，到自己推演</h1><p>先预测，再运行，最后用源码解释。已读进度与理解题成绩分别记录。</p></div></div><div class="path-summary"><b>${study.completed.length} 个专题已读</b><b>${Object.values(study.quiz).filter((q) => q.passed).length} 道理解题通过</b><b>${wrong.length} 道待复习</b></div>${foundationEntry()}${specEntry()}${algorithmEntry()}<div class="path-grid">${learningPaths.map((p, n) => `<section class="path-card"><span class="eyebrow">路线 0${n + 1}</span><h2>${p.title}</h2><p>${p.description}</p>${p.ids.map(tile).join('')}</section>`).join('')}</div><div class="path-grid secondary-paths"><section class="path-card"><h2>待复习</h2>${wrong.map(tile).join('') || '<p>答错的理解题会出现在这里。</p>'}</section><section class="path-card"><h2>我的收藏</h2>${study.bookmarks.map(tile).join('') || '<p>用专题标题旁的收藏按钮建立自己的学习清单。</p>'}</section></div>`;
 }

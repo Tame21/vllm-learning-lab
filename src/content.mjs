@@ -2,7 +2,10 @@ import { bindQuizzes } from './learning.mjs';
 import { registerExtras } from './extra-lessons.mjs';
 import { bindSources } from './source-map.mjs';
 import { registerSpecMethods, specMethods } from './spec-methods.mjs';
+import { registerAlgorithms } from './algorithm-catalog.mjs';
+import { registerFoundations } from './foundation-catalog.mjs';
 export const groups = [
+  ['foundations', '00', '前置基础'],
   ['start', '01', '从一个请求开始'],
   ['memory', '02', '调度与显存'],
   ['compute', '03', '模型与执行'],
@@ -11,6 +14,7 @@ export const groups = [
   ['features', '06', '输入与输出'],
   ['ops', '07', '服务与运维'],
   ['extend', '08', '后端与扩展'],
+  ['algorithms', '09', '算法专题'],
 ];
 export const source = (path, needle = '') => ({ path, needle });
 export const step = (title, body, change, ref = 0) => ({ title, body, change, ref });
@@ -347,6 +351,8 @@ bindQuizzes(lessons);
 // Expand the original overview chapters after binding the legacy questions, so
 // inserting new lessons does not change saved answer indices for older topics.
 registerSpecMethods(lessons);
+registerAlgorithms(lessons);
+registerFoundations(lessons);
 const specOrder = [
   'speculative',
   ...specMethods.map((m) => m.id),

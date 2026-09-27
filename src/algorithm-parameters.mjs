@@ -1,0 +1,38 @@
+export const algorithmParameters = {
+  aPreset: [0, 0, 2, 1],
+  aT: [1, 0, 2, 0.1],
+  aK: [2, 1, 5, 1],
+  aP: [0.8, 0.05, 1, 0.05],
+  aMin: [0.2, 0, 1, 0.05],
+  aU: [0.25, 0, 0.99, 0.01],
+  aCandidate: [0, 0, 2, 1],
+  aRepeat: [1.5, 1, 3, 0.25],
+  aFrequency: [0.5, 0, 2, 0.25],
+  aPresence: [0.5, 0, 2, 0.25],
+  aNgram: [3, 1, 5, 1],
+  aDraft: [3, 1, 6, 1],
+  aQuery: [2, 0, 3, 1],
+  aChunk: [2, 1, 4, 1],
+  aPos: [2, 0, 6, 1],
+  aEpsPower: [6, 1, 8, 1],
+  aGain: [1, 0.5, 2, 0.25],
+  aOffset: [5, 0, 11, 1],
+  aTake: [2, 1, 4, 1],
+  aScale: [1, 0, 2, 0.25],
+  aExperts: [2, 1, 4, 1],
+  aReplica: [2, 0, 4, 1],
+  aSkew: [3, 1, 8, 1],
+  aTokens: [3, 1, 4, 1],
+  aPoolMode: [0, 0, 2, 1],
+  aNormalize: [true],
+};
+export const algorithmDefaults = Object.fromEntries(
+  Object.entries(algorithmParameters).map(([k, v]) => [k, v[0]]),
+);
+export const algorithmFamilies = [
+  ['sampling', '采样基础', '从分数到概率，再到一个 token'],
+  ['speculation', '投机与搜索', '候选如何被验证、纠正和保留'],
+  ['model', '模型计算', '注意力、位置与数值稳定性'],
+  ['cache', '缓存算法', '从逻辑位置到可复用的物理块'],
+  ['numeric', '数值与路由', '小矩阵、低精度和专家分配'],
+];

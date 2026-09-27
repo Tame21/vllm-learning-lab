@@ -2,6 +2,10 @@ import { chromium } from 'playwright';
 import { runBrowserRegressions } from '../tests/browser-regressions.mjs';
 import { runCommandBrowserRegressions } from '../tests/command-browser-regressions.mjs';
 import { runSpecBrowserRegressions } from '../tests/spec-browser-regressions.mjs';
+import { runMechanismBrowserRegressions } from '../tests/mechanism-browser-regressions.mjs';
+import { runAlgorithmBrowserRegressions } from '../tests/algorithm-browser-regressions.mjs';
+import { runFoundationBrowserRegressions } from '../tests/foundation-browser-regressions.mjs';
+import { runEditorBrowserRegressions } from '../tests/editor-browser-regressions.mjs';
 
 const browser = await chromium.launch({ headless: true });
 try {
@@ -10,6 +14,10 @@ try {
   for (const result of await runBrowserRegressions(page)) console.log('PASS ' + result);
   for (const result of await runCommandBrowserRegressions(page)) console.log('PASS ' + result);
   for (const result of await runSpecBrowserRegressions(page)) console.log('PASS ' + result);
+  for (const result of await runMechanismBrowserRegressions(page)) console.log('PASS ' + result);
+  for (const result of await runAlgorithmBrowserRegressions(page)) console.log('PASS ' + result);
+  for (const result of await runFoundationBrowserRegressions(page)) console.log('PASS ' + result);
+  for (const result of await runEditorBrowserRegressions(page)) console.log('PASS ' + result);
 } finally {
   await browser.close();
 }

@@ -1,6 +1,13 @@
 import { defaults } from './simulations.mjs';
+import { mechanismParameterNames } from './mechanism-parameters.mjs';
+import { algorithmParameterNames } from './algorithm-catalog.mjs';
+import { foundationParameterNames } from './foundation-catalog.mjs';
 
 export function parameterNames(lesson) {
+  if (Object.hasOwn(foundationParameterNames, lesson.id))
+    return foundationParameterNames[lesson.id];
+  if (Object.hasOwn(algorithmParameterNames, lesson.id)) return algorithmParameterNames[lesson.id];
+  if (Object.hasOwn(mechanismParameterNames, lesson.id)) return mechanismParameterNames[lesson.id];
   if (lesson.id === 'pp') return ['ranks', 'microbatches'];
   return (
     {

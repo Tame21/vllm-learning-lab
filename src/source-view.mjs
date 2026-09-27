@@ -36,9 +36,10 @@ export function sourceLanguage(path) {
 export function sourceReaderShell(path) {
   const language = sourceLanguage(path);
   const filename = String(path).split('/').at(-1);
-  return `<div class="dialog-head source-titlebar"><div class="source-file-tab"><span class="source-file-icon" aria-hidden="true">${esc(language.badge)}</span><strong title="${esc(path)}">${esc(filename)}</strong></div><div class="source-actions"><button data-source-wrap aria-pressed="false" title="切换长行自动换行">自动换行</button><button data-source-reveal disabled>定位行</button><button data-close aria-label="关闭源码" title="关闭源码（Esc）">×</button></div></div>
+  return `<div class="dialog-head source-titlebar"><div class="source-file-tab"><span class="source-file-icon" aria-hidden="true">${esc(language.badge)}</span><strong title="${esc(path)}">${esc(filename)}</strong></div><div class="source-actions"><a data-source-vscode aria-label="在 VS Code 中打开" aria-disabled="true" tabindex="-1" referrerpolicy="no-referrer">在 VS Code 中打开 ↗</a><button data-source-copy-location disabled>复制文件定位</button><button data-source-wrap aria-pressed="false" title="切换长行自动换行">自动换行</button><button data-source-reveal disabled>定位行</button><button data-close aria-label="关闭源码" title="关闭源码（Esc）">×</button></div></div>
     <div class="source-breadcrumb"><span aria-hidden="true">vLLM ›</span><span class="source-file-path" title="${esc(path)}">${esc(path)}</span></div>
     <div class="full-code" tabindex="0" role="region" aria-label="源码内容，可用方向键滚动" aria-busy="true"><p class="source-message" role="status">正在读取源码…</p></div>
+    <div class="source-editor-help"><p data-source-editor-status role="status">源码读取后可在 VS Code 中定位到高亮行。</p><input data-source-location-fallback hidden readonly aria-label="文件定位，可复制到 VS Code 快速打开"></div>
     <div class="source-statusbar"><span>只读</span><span data-source-position role="status">正在读取…</span><span class="source-encoding">UTF-8</span><span>${esc(language.label)}</span></div>`;
 }
 

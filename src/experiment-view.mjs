@@ -1,8 +1,16 @@
 import { esc, token, metric, table, range, toggle } from './html.mjs';
 import { exampleRequests } from './engines/scheduler.mjs';
 import { grammarVocabulary } from './engines/cache.mjs';
+import { mechanismControls, mechanismScene } from './mechanism-view.mjs';
+import { mechanismIds } from './mechanism-parameters.mjs';
+import { algorithmControls, algorithmScene } from './algorithm-view.mjs';
+import { foundationControls, foundationScene } from './foundation-view.mjs';
 
 export function experimentControls(lesson, o) {
+  if (lesson.kind === 'foundation') return foundationControls(lesson, o);
+  if (lesson.kind === 'algorithm') return algorithmControls(lesson, o);
+  const mechanism = mechanismControls(lesson, o);
+  if (mechanism !== null) return mechanism;
   if (lesson.kind === 'scheduler') {
     const requests = o.requests || exampleRequests;
     return (
@@ -186,6 +194,9 @@ function moeView(f, index) {
 }
 
 export function experimentScene(lesson, index, o, frames) {
+  if (lesson.kind === 'foundation') return foundationScene(lesson, index, o, frames);
+  if (lesson.kind === 'algorithm') return algorithmScene(lesson, index, o, frames);
+  if (mechanismIds.includes(lesson.id)) return mechanismScene(lesson, index, o, frames);
   const f = frames[index];
   let visual = '';
   if (lesson.kind === 'scheduler') visual = schedulerView(f, frames, o);

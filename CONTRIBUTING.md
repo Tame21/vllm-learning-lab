@@ -14,7 +14,7 @@ npm start
 
 ## 新增或修订专题
 
-1. 在 `content.mjs` / `extra-lessons.mjs` 注册专题；投机方法在 `spec-methods.mjs` 中维护。
+1. 在 `content.mjs` / `extra-lessons.mjs` 注册专题；投机方法在 `spec-methods.mjs` 中维护，算法在 `algorithm-catalog.mjs` 中维护（参见 [算法指南](docs/ALGORITHMS.md)），前置基础在 `foundation-catalog.mjs` 中维护（参见 [基础指南](docs/FOUNDATIONS.md)）。基础课需明确符号、定义、算例和先修关系，源码链接说明概念的应用位置。
 2. 为每步指定准确的类方法、命名注册表或文档章节。需要时追加范围内唯一的文本锚点，不使用写死的行号。
 3. 模拟类实验先定义可验证的执行记录，再让图形、事件和指标读取同一份数据。仅解释机制的图解应明确标注，不伪装成模型实测。
 4. 添加理解题并保持旧专题 ID 与既有答案顺序，避免破坏本机学习记录。

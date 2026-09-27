@@ -15,7 +15,8 @@ test('4 块显存抢占场景恢复 B 时，4 个历史位置为 R，1 个新位
   assert.equal(resumed.recompute, 4);
   assert.equal(resumed.decode, 1);
   assert.equal(resumed.prefill, 0);
-  assert.equal(scheduleMetrics(frames).recomputed, 4);
+  // C later preempts itself while B still owns two blocks, adding 3 historical positions.
+  assert.equal(scheduleMetrics(frames).recomputed, 7);
   const html = scene(
     lessons.find((l) => l.id === 'scheduler'),
     4,

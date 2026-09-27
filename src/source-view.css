@@ -1,6 +1,7 @@
 /* Source reader: VS Code Dark+ inspired colors; all assets are served locally. */
 dialog.source-editor {
-  width: min(1320px, 96vw);
+  width: min(1320px, calc(100% - 24px));
+  max-width: calc(100% - 24px);
   height: min(900px, 88dvh);
   max-height: 88dvh;
   border: 1px solid #454545;
@@ -62,7 +63,8 @@ dialog.source-editor[open] {
   gap: 4px;
   flex: none;
 }
-.source-editor .source-actions button {
+.source-editor .source-actions button,
+.source-editor .source-actions a {
   color: #ccc;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -72,6 +74,17 @@ dialog.source-editor[open] {
     sans-serif;
   padding: 5px 8px;
   white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+.source-editor .source-actions [data-source-vscode] {
+  color: #9cdcfe;
+  border-color: #36516a;
+}
+.source-editor .source-actions [aria-disabled='true'] {
+  opacity: 0.45;
+  pointer-events: none;
+  cursor: default;
 }
 .source-editor .source-actions [data-close] {
   font-size: 24px;
@@ -79,7 +92,8 @@ dialog.source-editor[open] {
   padding: 3px 8px;
   margin-left: 4px;
 }
-.source-editor .source-actions button:hover {
+.source-editor .source-actions button:hover,
+.source-editor .source-actions a:hover {
   background: #3c3c3c;
 }
 .source-editor .source-actions [aria-pressed='true'] {
@@ -211,6 +225,28 @@ dialog.source-editor[open] {
 .source-statusbar [data-source-position] {
   margin-right: auto;
 }
+.source-editor-help {
+  flex: none;
+  padding: 7px 14px;
+  background: #252526;
+  border-top: 1px solid #383838;
+  font:
+    11px/1.7 'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+  color: #aaa;
+}
+.source-editor-help p {
+  margin: 0;
+}
+.source-editor-help input {
+  width: 100%;
+  margin: 6px 0;
+  padding: 6px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border: 1px solid #656565;
+}
 .source-editor .hljs-comment,
 .source-editor .hljs-quote {
   color: #6a9955;
@@ -274,8 +310,8 @@ dialog.source-editor[open] {
 }
 @media (max-width: 700px) {
   dialog.source-editor {
-    width: 98vw;
-    max-width: 98vw;
+    width: calc(100% - 12px);
+    max-width: calc(100% - 12px);
     height: 92dvh;
     max-height: 92dvh;
     border-radius: 6px;
@@ -283,9 +319,11 @@ dialog.source-editor[open] {
   .source-editor .source-titlebar {
     gap: 4px;
     padding-right: 4px;
+    flex-wrap: wrap;
   }
   .source-editor .source-file-tab {
-    flex: 1;
+    flex: 1 1 100%;
+    max-width: 100%;
     gap: 6px;
     padding: 10px 8px;
   }
@@ -295,8 +333,17 @@ dialog.source-editor[open] {
   .source-editor .source-file-icon {
     display: none;
   }
-  .source-editor .source-actions button {
-    padding: 6px;
+  .source-editor .source-actions {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: 3px 0;
+  }
+  .source-editor .source-actions button,
+  .source-editor .source-actions a {
+    font-size: 11px;
+    padding: 6px 4px;
   }
   .source-breadcrumb {
     padding: 8px 10px;

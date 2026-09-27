@@ -2,7 +2,7 @@ function identity(node) {
   if (node.nodeType !== 1) return node.nodeName;
   const key =
     node.id ||
-    ['data-param', 'data-lesson', 'data-row', 'data-view', 'data-tab']
+    ['data-param', 'data-lesson', 'data-row', 'data-view', 'data-tab', 'data-visual-key']
       .map((name) => (node.hasAttribute(name) ? `${name}:${node.getAttribute(name)}` : ''))
       .find(Boolean) ||
     '';

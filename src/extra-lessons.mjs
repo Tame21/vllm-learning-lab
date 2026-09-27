@@ -90,9 +90,9 @@ export function registerExtras(add, S, R) {
     '腾出工作台不会删除订单，但再次加工可能要重做准备。',
     [
       [
-        '分配失败',
-        '无法分配新计算所需的缓存块时，调度器尝试按策略抢占请求。',
-        'allocate_slots → 无法分配',
+        '检查与分配',
+        '调度器检查预算与空闲块。运行中请求无法分配新计算所需的缓存块时，才进入抢占分支。',
+        '检查预算 → allocate_slots',
       ],
       [
         '回收可释放块',
@@ -169,9 +169,9 @@ export function registerExtras(add, S, R) {
         '各类型有不同状态生命周期',
       ],
       [
-        '协调命中和释放',
-        '混合类型的前缀命中长度和回收规则需要联合决定。',
-        'single-type managers → coordinator',
+        '回收窗口外整块',
+        '已提交位置决定哪些整块可以跳过与回收；包含有效位置的部分块仍然保留。混合前缀命中另由缓存组协调。',
+        'processed tokens → skipped blocks → free',
       ],
     ],
     [

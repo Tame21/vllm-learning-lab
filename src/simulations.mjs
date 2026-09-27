@@ -1,7 +1,14 @@
 import { scheduleTrace, validateRequests } from './engines/scheduler.mjs';
 import { prefixResult } from './engines/cache.mjs';
+import { mechanismDefaults, mechanismParameters } from './mechanism-parameters.mjs';
+import { algorithmDefaults, algorithmParameters } from './algorithm-parameters.mjs';
+import { foundationDefaults, foundationParameters } from './foundation-parameters.mjs';
+const extraParameters = { ...mechanismParameters, ...algorithmParameters, ...foundationParameters };
 export { scheduleTrace, prefixResult };
 export const defaults = {
+  ...foundationDefaults,
+  ...mechanismDefaults,
+  ...algorithmDefaults,
   budget: 8,
   blockSize: 4,
   capacity: 16,
@@ -35,6 +42,21 @@ export function validateParameters(input, current = defaults) {
     microbatches: [1, 6, 1],
   };
   for (const [key, value] of Object.entries(input)) {
+    if (Object.hasOwn(extraParameters, key)) {
+      const [initial, min, max, step] = extraParameters[key];
+      if (typeof initial === 'boolean') {
+        if (typeof value !== 'boolean') throw Error(`${key} 必须为布尔值`);
+      } else if (
+        typeof value !== 'number' ||
+        !Number.isFinite(value) ||
+        value < min ||
+        value > max ||
+        Math.abs((value - min) / step - Math.round((value - min) / step)) > 1e-7
+      ) {
+        throw Error(`${key} 不在支持范围内`);
+      }
+      continue;
+    }
     if (['chunked', 'salt', 'prefixEnabled'].includes(key)) {
       if (typeof value !== 'boolean') throw Error(`${key} 必须为布尔值`);
       continue;
@@ -57,6 +79,7 @@ export function validateParameters(input, current = defaults) {
       throw Error(`${key} 不在支持范围内`);
   }
   const next = { ...current, ...input };
+  if (next.sdLow >= next.sdHigh) throw Error('草稿区间的第一个上限必须小于第二个上限');
   if (next.requests) next.requests = validateRequests(next.requests);
   return next;
 }

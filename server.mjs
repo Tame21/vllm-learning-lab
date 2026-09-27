@@ -3,26 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveSourcePath } from './scripts/project.mjs';
+import { resolvePublicFile, assertEditorRequest, editorTarget } from './scripts/source-files.mjs';
 const root = path.dirname(fileURLToPath(import.meta.url)),
   pub = path.join(root, 'dist');
 const repo = fs.realpathSync(resolveSourcePath());
 const port = process.env.PORT === undefined ? 4173 : Number(process.env.PORT);
 if (!Number.isInteger(port) || port < 0 || port > 65535)
   throw Error('PORT 必须是 0–65535 的整数。');
-const types = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.mjs': 'text/javascript',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.md': 'text/plain',
-  '.py': 'text/plain',
-  '.rs': 'text/plain',
-  '.cu': 'text/plain',
-  '.h': 'text/plain',
-  '.cuh': 'text/plain',
-};
 const server = http.createServer((req, res) => {
   try {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -30,40 +17,33 @@ const server = http.createServer((req, res) => {
       return res.end();
     }
     const url = new URL(req.url, 'http://localhost');
+    if (url.pathname === '/api/editor-link') {
+      assertEditorRequest(req, server.address().port);
+      const target = editorTarget(repo, url.searchParams);
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff',
+        'Cross-Origin-Resource-Policy': 'same-origin',
+      });
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(target));
+    }
     const isSource = url.pathname.startsWith('/source/');
     const base = isSource ? repo : pub;
     const rel =
       decodeURIComponent(isSource ? url.pathname.slice(8) : url.pathname.slice(1)) || 'index.html';
-    const full = path.resolve(base, rel);
-    const relative = path.relative(base, full);
-    if (
-      relative.startsWith('..') ||
-      path.isAbsolute(relative) ||
-      relative.split(/[\\/]/).some((v) => v.startsWith('.'))
-    ) {
-      res.writeHead(403);
-      return res.end('Forbidden');
-    }
-    if (!fs.existsSync(full) || !fs.statSync(full).isFile()) {
-      res.writeHead(404);
-      return res.end('Not found');
-    }
-    const real = fs.realpathSync(full),
-      inside = path.relative(base, real);
-    if (inside.startsWith('..') || path.isAbsolute(inside) || !types[path.extname(full)]) {
-      res.writeHead(403);
-      return res.end('Forbidden');
-    }
+    const { file, type } = resolvePublicFile(base, rel);
     res.writeHead(200, {
-      'Content-Type': `${types[path.extname(full)]}; charset=utf-8`,
+      'Content-Type': `${type}; charset=utf-8`,
       'Cache-Control': 'no-cache',
       'X-Content-Type-Options': 'nosniff',
     });
     if (req.method === 'HEAD') return res.end();
-    fs.createReadStream(full).pipe(res);
-  } catch {
-    res.writeHead(400);
-    res.end('Bad request');
+    fs.createReadStream(file).pipe(res);
+  } catch (error) {
+    const status = [400, 403, 404].includes(error.status) ? error.status : 400;
+    res.writeHead(status, { 'Cache-Control': 'no-store' });
+    res.end(status === 403 ? 'Forbidden' : status === 404 ? 'Not found' : 'Bad request');
   }
 });
 server.on('error', (e) => {
