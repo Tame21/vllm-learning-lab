@@ -2,7 +2,7 @@
 
 基于真实 vLLM 源码的中文交互学习工具：从一个请求的生命周期出发，逐步观察调度、KV Cache、模型执行、投机推理与多卡通信，再点击跳转到对应代码。
 
-**114 个专题 · 20 节前置基础 · 61 个状态推演实验 · 24 个算法详解 · 504 个步骤源码定位 · 12 种投机方法**
+**114 个专题 · 20 节前置基础 · 114 个状态推演实验 · 24 个算法详解 · 504 个步骤源码定位 · 12 种投机方法**
 
 运行只需要 [Node.js](https://nodejs.org/) 20+ 和 [Git](https://git-scm.com/)。无需 GPU、模型权重、Python，也无需安装 npm 依赖。
 
@@ -83,11 +83,11 @@ npm start
 
 1. 先做共同的“接受 / 拒绝”实验，再进入方法地图。
 2. 按草稿来源筛选 12 个独立方法：N-gram、N-gram GPU、Suffix、Draft Model、EAGLE、EAGLE3、MTP、MLP Speculator、Medusa、PARD、DFlash、DSpark。
-3. 每个方法提供 4 步专属机制图解、输入与权重说明、当前源码边界、理解题，以及可高亮实际行号的源码入口。
+3. 每个方法提供 4 个讲解环节、可调输入与逐事件观察窗、输入与权重说明、当前源码边界、理解题，以及可高亮实际行号的源码入口。
 4. 用双方法对照表比较输入、额外权重、候选依赖和实现边界。动态草稿长度、自适应验证、训练与接入另列为进阶专题。
 5. 展开配置说明，可将模板带入“启动命令”流程图。模板模型名须替换；环境变量前置采用 POSIX 写法，并按本章路径选择 MRV1 / MRV2。不执行命令，也不证明模型、硬件和配置组合能成功启动。
 
-边界：这些新增图解不运行草稿模型、不测量速度。PARD 是 `draft_model + parallel_drafting=true`；DSpark 是并行骨干加顺序 Markov 采样。本地 MLP 注册项被注释、Runner 未接入，因此该章标注“机制参考”并不提供启动模板。EAGLE3 辅助特征开关、MTP 模型专属分支及 DFlash / DSpark 布局变体均单独说明。
+边界：这些教学推演不运行草稿模型、不测量速度。PARD 是 `draft_model + parallel_drafting=true`；DSpark 是并行骨干加顺序 Markov 采样。本地 MLP 注册项被注释、Runner 未接入，因此该章标注“机制参考”并不提供启动模板。EAGLE3 辅助特征开关、MTP 模型专属分支及 DFlash / DSpark 布局变体均单独说明。
 
 ## 从启动命令生成流程图
 
@@ -114,6 +114,14 @@ vllm serve Qwen/Qwen3-8B \
 流程是**基于本地源码的逻辑推导**，不是调用追踪。默认以 GPU Worker 为实现示例，并标明 CPU / TPU 等平台差异；它不能替代 vLLM 的完整启动校验或确定请求实际生成的 token。
 
 ## 可推演的核心实验
+
+第二轮为模型加载、Logits Processor / Gumbel 水印、Pooling、Prompt Embeddings、休眠唤醒、请求指标、CUDA Graph 和 KV 卸载补齐了 8 个交互观察窗。每个窗口提供可调参数、场景预设、逐事件回放和源码联动。先点“选个场景”，再单步比较切片、向量、缓存或时间线的变化；具体步骤和教学边界见 [实验指南](docs/MECHANISM_EXPERIMENTS.md)。
+
+第三轮再补齐编译融合、KV FP8、在线权重量化、DBO、DP 路由和 Prefill / Decode 分离 6 个窗口。观察算子变换与缓存命中、字节编码和误差、加载期与运行期尺度、计算 / 通信依赖、路由分数和传输失败阻塞。两轮合计 44 个场景预设，数值和教学时隙都可检查。
+
+按路线本轮新增 39 个窗口，全部 114 个专题具有教学执行记录：20 个基础、24 个算法、70 个机制专题。12 种投机方法提供可编辑历史、特征形状或查询布局，服务专题增加 parser / SSE / 故障状态，模型与平台专题展示条件分支与支持边界。MLP 仅演示级联机制并保持未接入终态。
+
+原有 9 个状态专题也已深化，卸载补齐 GPU / CPU / 外部容量与淘汰，分离部署并排对照单实例读依赖。场景预设累计 170 个。完整逐项操作见 [路线实验指南](docs/ROADMAP_EXPERIMENTS.md)，验收与边界见 [路线清单](docs/VISUALIZATION_ROADMAP.md)。左侧可叠加内容形式与关键词筛选；可推演实验仍是无需模型或 GPU 的教学模拟。
 
 第一轮按学习主线补齐了 8 个观察窗。每个讲解环节可包含多个事件，播放、单步、拖动时间轴和点击关键环节会同步更新画面与源码。没有被当前参数触发的环节仍可阅读机制说明。可复现的操作步骤见 [观察窗实验指南](docs/MECHANISM_EXPERIMENTS.md)。
 
@@ -183,7 +191,13 @@ src/
   engines/mechanisms.mjs   生命周期、Runner、异步、混合 KV、Beam、动态 K 的事件推演
   engines/queue-mechanisms.mjs  调度事件到抢占 / 优先级观察窗的映射
   mechanism-parameters.mjs 参数范围、默认值与专题参数映射
-  mechanism-view.mjs      8 个观察窗、参数控件与关键事件入口
+  mechanism-view.mjs      机制控件、状态场景分发与关键事件入口
+  roadmap-parameters.mjs  新增观察窗的输入、标签、场景与边界目录
+  roadmap-*-view.mjs      核心、投机、协议、平台与模型专属场景
+  engines/roadmap-*.mjs   39 个新增专题的纯状态与数值记录
+  engines/observation-depth.mjs 原有九专题的观察微事件
+  engines/tiered-cache.mjs 三层容量、淘汰、回载与完成依赖
+  observation-depth-view.mjs 地址链、局部部分和与同步对照
   mechanisms.css          请求行、块池、泳道与候选树的响应式样式
   algorithm-catalog.mjs   24 个算法的清单、讲解、公式、算例与理解题
   algorithm-sources.mjs   算法逐步骤源码符号
@@ -225,7 +239,7 @@ npm test
 
 自动构建并运行 Node 测试，覆盖教学模型、源码映射、命令解析、投机方法差异、离线缓存、固定版本、启动与源码服务，以及发布检查。测试验证教学模型与静态推导的契约，不替代真实模型 / GPU 的集成测试。CI 从干净检出开始，在 Windows / Linux 与 Node.js 22 / 24 上验证。
 
-浏览器回归在 `tests/*browser-regressions.mjs`，共 34 组（包括 8 组机制观察窗、6 组算法交互、6 组前置基础、2 组编辑器定位）。覆盖方法地图、筛选对照、专属图解、精确源码跳转、MLP 边界、PARD 命令、基础概率与扩散交互等。编辑器回归核对协议目标、当前文件与行号及复制功能，不在自动化中启动桌面应用。可选的独立运行方式：
+浏览器回归在 `tests/*browser-regressions.mjs`，共 99 组（本轮新增 39 组专题交互和 11 组观察过程深化；其余覆盖原机制、算法、前置基础、命令与编辑器）。覆盖方法地图、筛选对照、专属图解、精确源码跳转、MLP 边界、PARD 命令、基础概率与扩散交互等。编辑器回归核对协议目标、当前文件与行号及复制功能，不在自动化中启动桌面应用。可选的独立运行方式：
 
 ```powershell
 # 仅开发验证需要；正常启动无需这些依赖。

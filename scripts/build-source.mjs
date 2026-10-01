@@ -7,6 +7,8 @@ import { coverageFor } from '../src/coverage.mjs';
 import { reviewedCommit, sourceKey } from '../src/source-map.mjs';
 import { locateSource } from './source-locator.mjs';
 import { commandSources } from '../src/command-sources.mjs';
+import { serviceSources } from '../src/service-sources.mjs';
+import { roadmapSources } from '../src/roadmap-sources.mjs';
 import { resolveSourcePath } from './project.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,6 +39,8 @@ const refs = {},
 for (const lesson of [
   ...lessons,
   { id: 'command', refs: Object.values(commandSources), steps: [] },
+  { id: 'service-mechanisms', refs: Object.values(serviceSources), steps: [] },
+  { id: 'roadmap', refs: Object.values(roadmapSources), steps: [] },
 ]) {
   const all = [
     ...lesson.refs,

@@ -1,0 +1,37 @@
+export async function runRoadmapModelBrowserRegressions(tab) {
+  const page = tab.playwright || tab, results = [], check = (v, m) => { if (!v) throw Error(m); };
+  const open = (id) => page.locator(`.lesson-nav button[data-lesson="${id}"]`).click();
+  const preset = (name) => page.getByRole('button', { name, exact: true }).click();
+  const last = () => page.getByLabel('执行时间轴').press('End');
+  await open('mla'); await preset('低秩与跨层复用'); await last(); check((await page.getByRole('table', { name: 'IndexCache F S 层复用' }).innerText()).includes('不重算'), 'S 层复用');
+  await preset('每层计算索引'); await last(); check(!(await page.getByRole('table', { name: 'IndexCache F S 层复用' }).innerText()).includes('不重算'), '频率 1 每层计算');
+  results.push('MLA latent、稀疏索引与 F/S 复用分离');
+  await open('speculators'); await preset('对齐隐藏状态数据'); await last(); check((await page.getByRole('table', { name: 'Speculators 对齐样本' }).locator('tbody tr').count()) === 4, '同一位置 stack 多层');
+  await preset('辅助层形状错误'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('不匹配'), '行数不匹配禁止导出');
+  results.push('隐藏状态样本对齐与外部训练边界');
+  await open('elastic'); await preset('两 rank 扩到四 rank'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('拓扑已激活'), '扩容确认后切换');
+  await preset('切换屏障失败'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('保留旧拓扑'), '屏障失败不切换');
+  results.push('EP 扩缩容迁移、目标就绪与切换屏障');
+  await open('long-context'); await preset('位置与窗口历史'); await last(); check((await page.locator('[data-visual-key^="long-history-"]').count()) === 4, '窗口可访问四个位置');
+  await preset('完整历史对照'); await last(); check((await page.locator('[data-visual-key^="long-history-"]').count()) === 13, 'Full 历史对照');
+  await preset('超过长度上限'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('超过'), '超限位置不计算');
+  results.push('RoPE 成对旋转、可访问历史与长度门禁');
+  await open('diffusion'); await preset('末尾画布截短'); await last(); check((await page.locator('.roadmap-diffusion-canvas .padded').count()) === 4 && (await page.locator('[data-visual-key^="diffusion-output-"]').count()) === 2, '只提交有效画布位置');
+  await page.getByLabel('执行时间轴').press('ArrowLeft'); check((await page.locator('[data-visual-key^="diffusion-output-"]').count()) === 0, '收敛步尚未提交');
+  results.push('随机画布去噪、下一步提交与 padding');
+  await open('invariance'); await preset('临界采样差异'); await last(); const changed = await page.getByRole('table', { name: 'FP32 归约顺序与临界采样' }).innerText();
+  await preset('共同归约顺序'); await last(); check(changed !== await page.getByRole('table', { name: 'FP32 归约顺序与临界采样' }).innerText(), '稳定归约改变舍入路径');
+  results.push('FP32 部分和与临界贪心对照');
+  await open('plugins'); await preset('一般插件逐进程注册'); await last(); check((await page.getByRole('table', { name: '插件发现与准入' }).innerText()).includes('回调就绪'), '一般插件默认加载');
+  await preset('endpoint 默认不准入'); await last(); check(!(await page.getByRole('table', { name: '插件发现与准入' }).innerText()).includes('回调就绪'), 'endpoint 需要白名单');
+  await preset('beta 加载失败'); await last(); check((await page.getByRole('table', { name: '插件发现与准入' }).innerText()).includes('加载异常'), '异常插件明确跳过');
+  results.push('插件组白名单、进程 registry 与加载失败');
+  await open('connectors'); await preset('逐层完成与等待'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('资源保留结束'), '发送完成后释放');
+  await preset('第二层传输失败'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('仍保留'), '部分失败不释放发送侧');
+  results.push('Connector 逐层加载、消费与两侧完成集合');
+  await open('rust'); await preset('Abort 消息边界'); await last(); check((await page.locator('.roadmap-dispatch-path').innerText()).includes('0x01'), 'Abort 单字节类型');
+  await page.getByRole('tab', { name: '对应源码', exact: true }).click(); check((await page.locator('.source-anchor').innerText()).includes('output.rs'), 'Rust 真实枚举源码');
+  await preset('Prompt Embeddings 不支持'); await last(); check((await page.locator('[data-visual-key="model-gate"]').innerText()).includes('不支持'), '不支持 tensor payload 不提交');
+  results.push('Rust 字段映射、Abort / FinishReason 与 tensor 边界');
+  return results;
+}

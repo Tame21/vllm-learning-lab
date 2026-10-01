@@ -9,6 +9,7 @@ export function parameterNames(lesson) {
   if (Object.hasOwn(algorithmParameterNames, lesson.id)) return algorithmParameterNames[lesson.id];
   if (Object.hasOwn(mechanismParameterNames, lesson.id)) return mechanismParameterNames[lesson.id];
   if (lesson.id === 'pp') return ['ranks', 'microbatches'];
+  if (lesson.id === 'structured') return ['grammarValue'];
   return (
     {
       scheduler: ['budget', 'capacity', 'blockSize', 'chunked', 'requests'],
@@ -27,7 +28,7 @@ export function registerAgentTools(api) {
   const schema = Object.fromEntries(
     Object.entries(defaults)
       .filter(([key]) => key !== 'accepted')
-      .map(([key, value]) => [key, { type: typeof value === 'boolean' ? 'boolean' : 'number' }]),
+      .map(([key, value]) => [key, { type: typeof value }]),
   );
   schema.requests = {
     type: 'array',

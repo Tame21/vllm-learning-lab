@@ -113,6 +113,8 @@ export function analyzeCommand(command, scenario = {}) {
   if (runnerEnv !== undefined && !['0', '1'].includes(runnerEnv))
     fail('VLLM_USE_V2_MODEL_RUNNER 在此工具中接受 0 或 1。');
   const runner = runnerEnv === '0' ? 'v1' : runnerEnv === '1' ? 'v2' : 'auto';
+  if (runner === 'v2' && ['ngram', 'ngram_gpu', 'suffix', 'draft_model', 'medusa', 'mlp_speculator'].includes(spec.method))
+    fail(`此版本 MRV2 的 init_speculator 未接入 ${spec.method}；请使用匹配的 MRV1 路径或受支持的方法。`);
   const kind =
     scenario.kind && scenario.kind !== 'auto'
       ? scenario.kind

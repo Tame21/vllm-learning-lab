@@ -46,6 +46,10 @@ export function validateParameters(input, current = defaults) {
       const [initial, min, max, step] = extraParameters[key];
       if (typeof initial === 'boolean') {
         if (typeof value !== 'boolean') throw Error(`${key} 必须为布尔值`);
+      } else if (typeof initial === 'string') {
+        const tokens = typeof value === 'string' ? value.trim().split(/\s+/) : [];
+        if (typeof value !== 'string' || value.length > min * 9 || !tokens.length || tokens.length > min || tokens.some((x) => !/^[A-Za-z0-9_]{1,8}$/.test(x)))
+          throw Error(`${key} 需要 1–${min} 个空格分隔的短 token（字母、数字或下划线）`);
       } else if (
         typeof value !== 'number' ||
         !Number.isFinite(value) ||

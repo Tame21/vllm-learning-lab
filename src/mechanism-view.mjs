@@ -1,4 +1,9 @@
 import { esc, metric, table, range, toggle } from './html.mjs';
+import { serviceMechanismView } from './service-mechanism-view.mjs';
+import { deviceMechanismView } from './device-mechanism-view.mjs';
+import { advancedMechanismView } from './advanced-mechanism-view.mjs';
+import { roadmapCatalog, roadmapIds } from './roadmap-parameters.mjs';
+import { roadmapScene } from './roadmap-view.mjs';
 import {
   mechanismParameters,
   mechanismParameterNames,
@@ -6,6 +11,7 @@ import {
 } from './mechanism-parameters.mjs';
 
 const labels = {
+  ...Object.assign({}, ...Object.values(roadmapCatalog).map((x) => x.labels)),
   lifePrompt: '输入 token 数',
   lifeOutput: '输出 token 上限',
   lifeEosAt: '第几枚输出为 EOS（0 关闭）',
@@ -36,8 +42,66 @@ const labels = {
   sdKLow: '低并发草稿 K',
   sdKMid: '中并发草稿 K',
   sdKHigh: '高并发草稿 K',
+  loadRanks: 'TP 设备数',
+  loadShards: 'checkpoint 文件数',
+  loadLayers: '教学模型层数',
+  processorPenalty: '生成频次惩罚',
+  processorBan: '屏蔽候选 D',
+  processorWatermark: '使用 Gumbel 水印采样',
+  processorTokens: '教学输出长度',
+  poolMethod: '汇聚方式',
+  poolTokens: '有效 token 数',
+  poolNormalize: 'L2 归一化输出',
+  poolShift: '隐藏向量平移量',
+  embedTokens: '输入向量行数',
+  embedWidth: '教学隐藏维度',
+  embedDirect: '直接使用预计算向量',
+  embedPosition: '教学 position 起点',
+  embedDelta: '预计算向量首维偏移',
+  sleepLevel: '休眠级别',
+  sleepWeights: '权重容量（教学单位）',
+  sleepKv: 'KV 容量（教学单位）',
+  sleepUpdate: '唤醒时更新到权重 v2',
+  metricQueue: '排队时长（ms）',
+  metricPrefill: 'Prefill 时长（ms）',
+  metricDecode: 'Decode 间隔（ms）',
+  metricNetwork: '单程传输时长（ms）',
+  metricTokens: '输出 token 数',
+  metricStall: '首个 Decode 额外停顿（ms）',
+  graphBatch: '运行时 batch size',
+  graphMax: '最大捕获 batch size',
+  graphEnabled: '启用 CUDA Graph',
+  graphStable: '保持捕获时的输入地址',
+  offloadCapacity: 'GPU 缓存槽数',
+  offloadTarget: '重点访问的 KV 块',
+  offloadHit: 'CPU 已缓存重点块',
+  offloadDelay: '传输完成所需时隙',
+  offloadCpuCapacity: 'CPU 缓存容量（块）',
+  offloadExternalCapacity: '外部缓存容量（块）',
+  offloadExternalHit: '外部层已缓存重点块',
+  compileRows: '输入 batch 行数',
+  compileFusion: '融合 RMSNorm 与 FP8 Quant',
+  compileChangeShape: '第二次调用改变输入行数',
+  kvQuantTokens: 'KV token 数',
+  kvQuantScale: '手动 K / V scale',
+  kvQuantCalibrate: '从当前张量选择 K / V scale',
+  quantRows: '教学权重输出行数',
+  quantOutlier: '首行权重离群倍率',
+  quantActivation: '本次激活幅度',
+  dboOverlap: '允许计算与通信重叠',
+  dboCompute: '单阶段计算时隙',
+  dboComm: '单阶段通信时隙',
+  dpRanks: 'DP 副本数',
+  dpBacklog: 'DP 0 背景等待数',
+  dpKvPressure: 'DP 0 KV 使用率（%）',
+  dpPinned: '六个请求显式指定 DP 0',
+  disaggTokens: 'Prompt token 数',
+  disaggChunk: '每次传输的 KV 块数',
+  disaggDelay: '每组传输完成时隙',
+  disaggFail: '最后一组传输失败',
 };
 const notes = {
+  ...Object.fromEntries(Object.entries(roadmapCatalog).map(([id, x]) => [id, x.note])),
   lifecycle: '示例 token ID，不调用模型；每块 4 个位置。EOS 设为 0 时按输出上限停止。',
   runner: '三个演示批次共用请求身份；完成 B、加入 D 和改变顺序都会重新计算布局。',
   preemption: '取消发生在轮次边界；本例不模拟仍在途的 GPU 工作。轮次从 0 开始。',
@@ -46,6 +110,20 @@ const notes = {
   hybrid: '窗口包含当前 query；只回收完全落在窗口外、且本步已不再读取的整块。',
   beam: '三词示例词表 A / B / EOS。固定前缀 2 token；得分分母包含前缀和输出长度，排除 EOS。',
   'dynamic-spec': '两个区间上限必须递增。K=0 关闭草稿；区间参数不是通用最优配置。',
+  'model-loading': 'checkpoint 文件分片与设备切片分别设置；矩阵按 [输入, 输出] 展示，不执行真实加载。',
+  logits: '四词教学词表；Gumbel 公式与去重计分对照源码，随机数不实现生产 PRF。',
+  pooling: '预设二维隐藏状态；只演示 embedding 汇聚，不代表模型支持任意 pooling 切换。',
+  'prompt-embeds': '直接输入仅省去对应查表。向量首维偏移只影响预计算路径。',
+  sleep: '权重与 KV 容量均为教学单位。恢复内存、恢复内容和恢复服务分别观察。',
+  metrics: '人工设定时间；客户端与服务端起点不同，网络传输可与后续 Decode 重叠。',
+  cudagraph: '示例捕获 2、4、6、8 中不超过上限的大小；每次前向包含三个教学 kernel。',
+  offload: 'GPU、CPU 与外部缓存分别限容；教学 LRU 淘汰与回载均等待副本有效，不模拟完整 Attention 工作集。',
+  compile: '三次调用同一数学子图；教学缓存按确切形状查找，不复现动态形状编译器。',
+  'kv-quant': 'E4M3 编码可检查；自动 scale 只看当前张量，未实施生产数据集校准。',
+  'online-quant': '当前层 per-tensor 权重量化；一枚输入 token 的激活在运行时动态缩放。',
+  dbo: '两个 microbatch 的简化 MoE 依赖图；时隙与调度不是生产性能预测。',
+  dp: '六个新请求、一个客户端；负载分数与同分扫描规则来自本项目固定源码。',
+  disagg: '每块四个 KV 位置；只研究传输确认与 Decode 就绪，不实现底层连接器。',
 };
 
 export function mechanismControls(lesson, o) {
@@ -53,11 +131,18 @@ export function mechanismControls(lesson, o) {
   return (
     mechanismParameterNames[lesson.id]
       .map((key) => {
+        const choices = roadmapCatalog[lesson.id]?.choices?.[key];
+        if (choices) return `<label class="setting"><span>${esc(labels[key])}</span><select data-param="${key}" aria-label="${esc(labels[key])}">${choices.map(([value, label]) => `<option value="${value}" ${o[key] === value ? 'selected' : ''}>${esc(label)}</option>`).join('')}</select></label>`;
+        if (['poolMethod', 'sleepLevel'].includes(key)) {
+          const values = key === 'poolMethod' ? [[0, 'MEAN · 平均'], [1, 'CLS · 首位置'], [2, 'LAST · 末位置']] : [[1, 'Level 1 · 备份权重'], [2, 'Level 2 · 丢弃权重']];
+          return `<label class="setting"><span>${labels[key]}</span><select data-param="${key}" aria-label="${labels[key]}">${values.map(([value, label]) => `<option value="${value}" ${o[key] === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>`;
+        }
         if (key === 'blockSize')
           return `<label class="setting"><span>每块 token 数</span><select data-param="blockSize" aria-label="每块 token 数">${[2, 4, 8].map((n) => `<option value="${n}" ${o.blockSize === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`;
         if (key === 'seed')
           return `<label class="setting"><span>随机种子</span><input type="number" min="1" max="9999" value="${o.seed}" data-param="seed" aria-label="随机种子"></label>`;
         const [initial, min, max, step] = mechanismParameters[key];
+        if (typeof initial === 'string') return `<label class="setting setting-token-history"><span>${esc(labels[key])}</span><input type="text" value="${esc(o[key])}" maxlength="${min * 9}" data-param="${key}" aria-label="${esc(labels[key])}" spellcheck="false"><small>空格分隔，最多 ${min} 个 token · Enter 应用</small></label>`;
         return typeof initial === 'boolean'
           ? toggle(o, key, labels[key])
           : range(o, key, labels[key], min, max, step);
@@ -270,6 +355,7 @@ function dynamicView(f) {
 
 export function mechanismScene(lesson, index, o, frames) {
   const f = frames[index];
+  if (roadmapIds.includes(lesson.id)) return `<div class="mechanism-scene" data-mechanism="${lesson.id}">${roadmapScene(lesson.id, f, o)}<div class="state-strip" aria-live="polite"><span>事件 ${index + 1} / ${frames.length}</span><code>${esc(f.events.join(' '))}</code></div></div>`;
   const render = {
     lifecycle: () => lifecycleView(f, o),
     runner: () => runnerView(f),
@@ -279,6 +365,9 @@ export function mechanismScene(lesson, index, o, frames) {
     hybrid: () => hybridView(f, o),
     beam: () => beamView(f, o),
     'dynamic-spec': () => dynamicView(f),
+    cudagraph: () => deviceMechanismView(lesson.id, f, o),
+    offload: () => deviceMechanismView(lesson.id, f, o),
+    ...Object.fromEntries(['compile', 'kv-quant', 'online-quant', 'dbo', 'dp', 'disagg'].map((id) => [id, () => advancedMechanismView(id, f, o)])),
   };
-  return `<div class="mechanism-scene" data-mechanism="${lesson.id}">${render[lesson.id]()}<div class="state-strip" aria-live="polite"><span>事件 ${index + 1} / ${frames.length}</span><code>${esc(f.events.join(' '))}</code></div></div>`;
+  return `<div class="mechanism-scene" data-mechanism="${lesson.id}">${render[lesson.id] ? render[lesson.id]() : serviceMechanismView(lesson.id, f, o)}<div class="state-strip" aria-live="polite"><span>事件 ${index + 1} / ${frames.length}</span><code>${esc(f.events.join(' '))}</code></div></div>`;
 }

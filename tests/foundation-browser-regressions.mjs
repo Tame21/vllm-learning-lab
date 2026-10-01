@@ -23,6 +23,12 @@ export async function runFoundationBrowserRegressions(tab) {
   await page.getByLabel('搜索学习专题').press('ControlOrMeta+A');
   await page.getByLabel('搜索学习专题').press('Backspace');
   await page.locator('.foundation-card[data-lesson="base-bayes"]').click();
+  // A previous run deliberately changed the prior and persisted that session.
+  // Establish this numerical example through the same controls before checking it.
+  for (const [label, steps] of [['先验 P(H)', 3], ['似然 P(红球 | H)', 15], ['似然 P(红球 | 非 H)', 1]]) {
+    await page.getByLabel(label, { exact: true }).press('Home');
+    for (let i = 0; i < steps; i++) await page.getByLabel(label, { exact: true }).press('ArrowRight');
+  }
   await last();
   check((await scene()).includes('0.6667'), '贝叶斯默认后验为 2/3');
   check((await page.locator('.foundation-boxes section').count()) === 2, '两个来源盒子可见');

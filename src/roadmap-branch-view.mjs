@@ -1,0 +1,20 @@
+import { esc, table, metric } from './html.mjs';
+const checks = (rows, label) => table(['已检查条件', '结果', '依据 / 输入'], rows.map((c) => [esc(c.condition), `<span class="roadmap-check ${c.ok ? 'pass' : 'fail'}">${c.ok ? '通过' : '不通过'}</span>`, esc(c.detail)]), label);
+const gate = (f, detail) => `<div class="advanced-gate ${!f.blocked && f.stepIndex === 3 ? 'ready' : ''}" data-visual-key="branch-gate"><b>${esc(f.status)}</b><span>${esc(detail)}</span></div>`;
+function config(f) {
+  return `<pre class="roadmap-protocol-json">${esc(f.command)}</pre><div class="roadmap-protocol-fields">${f.objects.map((x) => `<section><h3>${esc(x.name)}</h3><code>${esc(JSON.stringify(x.values))}</code></section>`).join('')}</div>${checks(f.checks, '配置对象交叉校验')}${gate(f, f.route ?? '尚无执行路径')}<p class="scene-footnote">复用当前启动命令分析器；demo-model 与头数为教学输入。画面只展示 Model / Parallel / Speculative / Runner 选择，Cache 和 Scheduler 等其他配置仍取默认并需生产校验。</p>`;
+}
+function backend(f) {
+  return `<h3>输入约束</h3><pre class="roadmap-protocol-json">${esc(JSON.stringify(f.inputs))}</pre><div class="roadmap-protocol-fields">${f.candidates.map((c) => `<section><h3>${c.name}</h3>${checks(c.checks, `${c.name} 条件筛选`)}<b>${c.eligible === null ? '检查中' : c.eligible ? '已检查条件通过' : '被排除'}</b></section>`).join('')}</div><h3>示例 Attention 元数据</h3><pre class="roadmap-protocol-json">${esc(f.metadata ? JSON.stringify(f.metadata, null, 2) : '无有效候选，暂不构造')}</pre>${gate(f, f.selected ? `教学候选顺序选择 ${f.selected}；尚未调用 kernel` : '需要调整条件或选择其他候选后端')}<p class="scene-footnote">仅核对 CUDA 下 Dense FLASH_ATTN / TRITON_ATTN 的 head、dtype、block、capability 与 MLA 类型。假定已安装所需包，KV dtype=auto、无 sink、无 sparse。真实后端候选顺序和 FA 版本组合还有更多条件；这里通过筛选不构成完整支持承诺。</p>`;
+}
+function adaptive(f) {
+  return `<h3>候选位置按存活概率排序 · 蓝框表示教学预算选择</h3><div class="roadmap-probabilities">${f.slots.map((s) => `<div class="${s.admitted ? 'selected' : ''}" data-visual-key="survival-${s.id}-${s.position}"><b>${s.id}/${s.position}</b><div><i style="width:${s.survival * 100}%"></i></div><span>${s.survival.toFixed(3)}</span></div>`).join('')}</div>${table(['草稿预算', '教学 shape 成本', '期望输出', '期望输出 / 成本', '选择'], f.costRows.map((r) => [r.n, r.cost.toFixed(2), r.expected?.toFixed(3) ?? '待算', r.efficiency?.toFixed(3) ?? '待算', r.n === f.chosen ? '最优教学预算' : '']), '自适应验证成本与全局预算')}<div class="metrics-row">${metric(f.chosen ?? '—', '全局草稿预算')}${metric(f.allocated.A, 'A 计划验证长度')}${metric(f.allocated.B, 'B 计划验证长度')}</div>${checks(f.checks, '自适应验证支持检查')}${gate(f, f.blocked ? '计划可观察，实际启用被阻止' : '这是计划，实际接受 / 拒绝由目标验证决定')}<p class="scene-footnote">两个请求各有三候选，成本曲线为 2 + 0.1n + 饱和成本 × max(0,n−2)²；期望产出简化为两个目标 token 加入选草稿存活概率。不模拟真实 startup profiling、置信度校准、设备截断 kernel 或 tokens/s。</p>`;
+}
+function platform(f, o) {
+  return `<h3>CustomOp 教学分发 · ${esc(f.platform)}</h3><div class="roadmap-dispatch-path">${f.path.map((x, i) => `${i ? '<span aria-hidden="true">→</span>' : ''}<code>${x}</code>`).join('')}</div>${checks(f.checks, 'CustomOp 实现检查')}<div class="metrics-row">${metric(o.opInput, '教学输入 x')}${metric(f.result ?? '未执行', '教学输出 y')}</div>${gate(f, f.blocked ? '不会用缺失实现构造成功结果' : '仅展示分发，不检测当前机器或运行硬件算子')}<p class="scene-footnote">基类 HIP 默认调用 CUDA；CPU、XPU、OOT 默认调用 native。具体 CustomOp 可以覆盖这些方法，且平台插件可改变分发。此教学算子提供 y=2x 的 CUDA 实现与可选 native，实现存在与特定模型支持是两项检查。</p>`;
+}
+function compatibility(f) {
+  return `<h3>当前选定特性</h3><pre class="roadmap-protocol-json">${esc(JSON.stringify(f.features, null, 2))}</pre>${checks(f.checks, '固定版本特性组合检查')}${gate(f, f.blocked ? `${f.checks.filter((c) => !c.ok).length} 条已知冲突` : '还需模型、平台与后端的其余校验')}<p class="scene-footnote">DSpark 选项假定 checkpoint 有 confidence head。这里覆盖自适应的 method / LoRA / PP / Eager 限制及 MRV2 N-gram 边界，不能外推为完整 Feature × Hardware × Model 支持矩阵。</p>`;
+}
+const views = { configuration: config, 'attention-backends': backend, 'adaptive-spec': adaptive, platform, compatibility };
+export const roadmapBranchViews = Object.fromEntries(Object.entries(views).map(([id, view]) => [id, (f, o) => `<div class="scene-caption"><span>${esc(f.status)}</span><span>条件驱动的决策观察</span></div>${view(f, o)}`]));

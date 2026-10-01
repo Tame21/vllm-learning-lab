@@ -5,6 +5,7 @@ import { mechanismControls, mechanismScene } from './mechanism-view.mjs';
 import { mechanismIds } from './mechanism-parameters.mjs';
 import { algorithmControls, algorithmScene } from './algorithm-view.mjs';
 import { foundationControls, foundationScene } from './foundation-view.mjs';
+import { depthView, synchronousScheduleView } from './observation-depth-view.mjs';
 
 export function experimentControls(lesson, o) {
   if (lesson.kind === 'foundation') return foundationControls(lesson, o);
@@ -51,6 +52,7 @@ export function experimentControls(lesson, o) {
       range(o, 'quality', '草稿分布接近目标的程度', 0, 100, 10) +
       `<label class="setting"><span>随机种子</span><input type="number" data-param="seed" min="1" max="9999" value="${o.seed}" aria-label="随机种子"></label>`
     );
+  if (lesson.id === 'structured') return range(o, 'grammarValue', '字符串值（0 vLLM / 1 模型）', 0, 1);
   if (lesson.id === 'pp')
     return (
       range(o, 'ranks', '流水线段数', 2, 4) + range(o, 'microbatches', '独立 microbatch 数', 1, 6)
@@ -71,27 +73,29 @@ function stateDiff(frame) {
       transition(before?.blocks?.join(',') || '∅', r.blocks.join(',') || '∅'),
     ];
   });
-  return `<section class="state-inspector"><h3>这一轮改变了什么</h3>${table(['请求', '已计算 KV 位置', '已生成 token', '持有的物理块'], rows, '执行前后状态')}<p class="scene-footnote">左侧是执行前，右侧是执行后；调度图中的物理块池展示执行期间占用，完成后释放反映在此表中。</p></section>`;
+  return `<section class="state-inspector"><h3>${frame.phase ? '本次事件改变了什么' : '这一轮改变了什么'}</h3>${table(['请求', '已计算 KV 位置', '已生成 token', '持有的物理块'], rows, '执行前后状态')}<p class="scene-footnote">${frame.phase ? '左侧是事件前，右侧是事件后；块池展示当前占用，完成释放可逐事件观察。' : '左侧是执行前，右侧是执行后；调度图中的物理块池展示执行期间占用，完成后释放反映在此表中。'}</p></section>`;
 }
 
 function schedulerView(frame, frames, o) {
+  const rounds = frames.filter((f) => f.roundEnd || !f.phase);
+  const jump = (f) => frames.indexOf(f);
   const owners = new Map(frame.blocksDuring.flatMap((r) => r.blocks.map((id) => [id, r.id])));
   return `<div class="scene-caption"><span>第 ${frame.tick + 1} 轮 · ${frame.requests.length} 个请求</span><span>P 新 prompt · D 新 decode · R 重算历史 KV</span></div>
     <div class="request-lanes">${frame.requests.map((r) => `<div class="request-lane"><div class="request-label"><b class="req-${r.id}">${r.id}</b><span>${r.status}</span></div><div class="request-track">${Array.from({ length: r.prompt }, (_, n) => token(n, n < r.computed ? 'prompt computed' : 'prompt')).join('')}<span class="phase-break">→</span>${Array.from({ length: r.max }, (_, n) => token(n + 1, n < r.output ? 'generated' : 'pending')).join('')}</div><span class="lane-number">${r.output}/${r.max}</span></div>`).join('')}</div>
     <div class="batch-tokens">${frame.allocations.map((a) => `<div class="batch-card req-${a.id}"><b>${a.id}</b><span>${a.phase} · 位置 ${a.from}…${a.to - 1}</span><strong>${a.count} tokens</strong><small>P${a.prefill} / D${a.decode} / R${a.recompute}</small></div>`).join('') || '<p>本轮没有计算，等待资源或请求到达。</p>'}</div>
-    <h3 class="diagram-label">执行期间的 KV 物理块池</h3><div class="block-pool">${Array.from({ length: o.capacity }, (_, id) => `<div class="physical-block ${owners.has(id) ? 'allocated' : ''}"><b>#${id}</b><span>${owners.get(id) || '空闲'}</span></div>`).join('')}</div>
-    <div class="timeline-grid"><div class="timeline-head"><span>批次时间线</span><span>点击轮次回看</span></div><div class="timeline-scroll"><table aria-label="请求调度时间线"><thead><tr><th>请求</th>${frames.map((f, i) => `<th><button data-step="${i}" class="${i === frame.tick ? 'current' : ''}">${i + 1}</button></th>`).join('')}</tr></thead><tbody>${frame.requests
+    <h3 class="diagram-label">${frame.phase ? '当前 KV 物理块池' : '执行期间的 KV 物理块池'}</h3><div class="block-pool">${Array.from({ length: o.capacity }, (_, id) => `<div class="physical-block ${owners.has(id) ? 'allocated' : ''}"><b>#${id}</b><span>${owners.get(id) || '空闲'}</span></div>`).join('')}</div>
+    <div class="timeline-grid"><div class="timeline-head"><span>批次时间线</span><span>点击轮次回看</span></div><div class="timeline-scroll"><table aria-label="请求调度时间线"><thead><tr><th>请求</th>${rounds.map((f, i) => `<th><button data-step="${jump(f)}" class="${f.tick === frame.tick ? 'current' : ''}">${i + 1}</button></th>`).join('')}</tr></thead><tbody>${frame.requests
       .map(
         (r) =>
-          `<tr><th>${r.id}</th>${frames
+          `<tr><th>${r.id}</th>${rounds
             .map((f, i) => {
               const a = f.allocations.find((a) => a.id === r.id);
-              return `<td><button data-step="${i}" class="timeline-cell ${a ? 'filled req-' + r.id : ''} ${i === frame.tick ? 'current' : ''}" aria-label="第 ${i + 1} 轮请求 ${r.id}">${a ? [a.prefill ? 'P' + a.prefill : '', a.decode ? 'D' + a.decode : '', a.recompute ? 'R' + a.recompute : ''].filter(Boolean).join('+') : '·'}</button></td>`;
+              return `<td><button data-step="${jump(f)}" class="timeline-cell ${a ? 'filled req-' + r.id : ''} ${f.tick === frame.tick ? 'current' : ''}" aria-label="第 ${i + 1} 轮请求 ${r.id}">${a ? [a.prefill ? 'P' + a.prefill : '', a.decode ? 'D' + a.decode : '', a.recompute ? 'R' + a.recompute : ''].filter(Boolean).join('+') : '·'}</button></td>`;
             })
             .join('')}</tr>`,
       )
       .join('')}</tbody></table></div></div>
-    <div class="metrics-row">${metric(frame.used + '/' + o.budget, '本轮计算 token')}${metric(frame.usedDuring + '/' + o.capacity, '执行期间占用块')}${metric(
+    <div class="metrics-row">${metric(frame.used + '/' + o.budget, frame.phase && !frame.roundEnd ? '本轮已安排 token' : '本轮计算 token')}${metric(frame.usedDuring + '/' + o.capacity, frame.phase ? '当前占用块' : '执行期间占用块')}${metric(
       frame.allocations.reduce((n, a) => n + a.recompute, 0),
       '本轮重算 token',
     )}</div>
@@ -122,7 +126,8 @@ function grammarView(f) {
 }
 
 function speculativeView(f, index, o) {
-  return `<div class="scene-caption"><span>可复现的拒绝采样 · seed ${o.seed}</span><span>p / q 为示例分布，不调用模型</span></div><div class="spec-lane"><label>草稿候选</label><div>${f.candidates.map((c, n) => token(c.word, index < 2 ? 'draft' : n < f.accepted ? 'generated' : n === f.accepted ? 'rejected' : 'discarded')).join('')}</div></div>
+  index = f.stepIndex;
+  return `<div class="scene-caption"><span>可复现的拒绝采样 · seed ${o.seed}</span><span>p / q 为示例分布，不调用模型</span></div><div class="spec-lane"><label>草稿候选</label><div>${f.candidates.map((c, n) => token(c.word, index < 2 ? 'draft' : c.state === '接受' ? 'generated' : c.state === '拒绝' ? 'rejected' : c.state === '丢弃' ? 'discarded' : 'draft')).join('')}</div></div>
     ${
       index >= 1
         ? table(
@@ -132,7 +137,7 @@ function speculativeView(f, index, o) {
               c.q[c.candidate].toFixed(3),
               c.p[c.candidate].toFixed(3),
               c.probability.toFixed(3),
-              index >= 2 ? c.u.toFixed(3) : '待验证',
+              index >= 2 && c.state !== '待验证' && c.state !== '丢弃' ? c.u.toFixed(3) : '待验证',
               index >= 2 ? c.state : '待验证',
             ]),
             '拒绝采样计算',
@@ -146,7 +151,7 @@ function speculativeView(f, index, o) {
 }
 
 function tensorView(f, index) {
-  return `<div class="scene-caption"><span>行并行线性层 · y = x Wᵀ</span><span>x[1,12] · W[2,12] · y[1,2]</span></div><div class="device-grid" style="--ranks:${f.shards.length}">${f.shards.map((s) => `<div class="device active"><span>GPU ${s.rank}</span><div class="device-core">W[:, ${s.from}:${s.to}]<br>${s.weights.map((row) => `[${row}]`).join('<br>')}</div><div class="device-token">xᵣ = [${s.input}]<br>${index >= 1 ? `局部结果 [${s.partial}]` : '等待乘法'}</div></div>`).join('')}</div><div class="communication ${index >= 2 ? 'on' : ''}"><span>All-reduce · SUM</span><div>${f.shards.map(() => '<i></i>').join('')}</div></div><div class="formula">${index >= 2 ? f.shards.map((s) => `[${s.partial}]`).join(' + ') + ` = [${f.output}]` : '局部乘法之后才能对部分和执行归并'}</div>`;
+  return `<div class="scene-caption"><span>行并行线性层 · y = x Wᵀ</span><span>x[1,12] · W[2,12] · y[1,2]</span></div><div class="device-grid" style="--ranks:${f.shards.length}">${f.shards.map((s) => `<div class="device active"><span>GPU ${s.rank}</span><div class="device-core">W[:, ${s.from}:${s.to}]<br>${s.weights.map((row) => `[${row}]`).join('<br>')}</div><div class="device-token">xᵣ = [${s.input}]<br>${index >= 1 ? `局部结果 [${f.partialNow?.[s.rank] || s.partial}]` : '等待乘法'}</div></div>`).join('')}</div><div class="communication ${index >= 2 ? 'on' : ''}"><span>All-reduce · SUM</span><div>${f.shards.map(() => '<i></i>').join('')}</div></div><div class="formula">${index >= 2 ? f.shards.map((s) => `[${f.partialNow?.[s.rank] || s.partial}]`).join(' + ') + ` = [${f.reduction || f.output}]` : '局部乘法之后才能对部分和执行归并'}</div>`;
 }
 
 function pipelineView(f, frames) {
@@ -190,7 +195,7 @@ function moeView(f, index) {
       }</div><div class="device-token">${index >= 1 ? f.tokens.flatMap((t) => t.routes.filter((r) => r.rank === rank).map((r) => `T${t.id}→E${r.expert}`)).join(' · ') : '等待 dispatch'}</div></div>`,
   ).join(
     '',
-  )}</div>${index >= 3 ? `<div class="formula">${f.tokens.map((t) => `T${t.id}: ${t.routes.map((r) => `${r.weight.toFixed(3)} × ${r.value}`).join(' + ')} = ${t.output.toFixed(3)}`).join('<br>')}</div>` : ''}<p class="scene-footnote">示例专家 fₑ(x)=(e+1)x；真实模型使用专家网络。跨卡 dispatch 与 combine 需要通信，同卡分支只需要本地搬运。</p>`;
+  )}</div>${index >= 3 ? `<div class="formula">${f.tokens.filter((t) => !f.routeProgress || f.routeProgress.some((r) => r.token === t.id && r.phase === 'combined')).map((t) => `T${t.id}: ${t.routes.map((r) => `${r.weight.toFixed(3)} × ${r.value}`).join(' + ')} = ${t.output.toFixed(3)}`).join('<br>')}</div>` : ''}<p class="scene-footnote">示例专家 fₑ(x)=(e+1)x；真实模型使用专家网络。跨卡 dispatch 与 combine 需要通信，同卡分支只需要本地搬运。</p>`;
 }
 
 export function experimentScene(lesson, index, o, frames) {
@@ -204,17 +209,17 @@ export function experimentScene(lesson, index, o, frames) {
     visual = cacheView(lesson, f, index, o);
   else if (lesson.id === 'structured') visual = grammarView(f);
   else if (lesson.id === 'speculative') visual = speculativeView(f, index, o);
-  else if (lesson.id === 'tp') visual = tensorView(f, index);
+  else if (lesson.id === 'tp') visual = tensorView(f, f.stepIndex);
   else if (lesson.id === 'pp') visual = pipelineView(f, frames);
-  else if (lesson.id === 'moe') visual = moeView(f, index);
+  else if (lesson.id === 'moe') visual = moeView(f, f.stepIndex);
   return (
-    visual +
+    depthView(lesson.id, f) + visual +
     stateDiff(f) +
     `<div class="state-strip"><span>本步事件</span><code>${esc(f.events.join(' '))}</code></div>`
   );
 }
 
-export function comparisonView(lesson, comparison, frames, o) {
+export function comparisonView(lesson, comparison, frames, o, index = 0) {
   if (lesson.kind === 'scheduler')
     return `<section class="comparison-panel"><h3>同一工作负载，开关切块会怎样？</h3>${table(
       ['配置', '完成', '逻辑轮次', '计算 token', '重算 token', '峰值 KV 块'],
@@ -227,7 +232,7 @@ export function comparisonView(lesson, comparison, frames, o) {
         m.peak,
       ]),
       '同工作负载对照',
-    )}<p>两组均使用上方请求、预算与块容量。停滞组尚未完成，计算量不能直接与完成组比较。</p></section>`;
+    )}${synchronousScheduleView(comparison, frames[index]?.tick ?? 0)}<p>两组均使用上方请求、预算与块容量。停滞组尚未完成，计算量不能直接与完成组比较。</p></section>`;
   if (lesson.id === 'prefix') {
     const r = frames.at(-1).result;
     return `<section class="comparison-panel"><h3>同样的 A、B 请求，缓存节省了多少计算？</h3>${table(

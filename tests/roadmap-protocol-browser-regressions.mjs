@@ -1,0 +1,33 @@
+export async function runRoadmapProtocolBrowserRegressions(tab) {
+  const page = tab.playwright || tab, results = [], check = (v, m) => { if (!v) throw Error(m); };
+  const open = (id) => page.locator(`.lesson-nav button[data-lesson="${id}"]`).click();
+  const preset = (name) => page.getByRole('button', { name, exact: true }).click();
+  const last = () => page.getByLabel('执行时间轴').press('End');
+  await open('speech'); await preset('分组音频续接'); await last();
+  check((await page.getByRole('table', { name: '语音流式续接更新' }).locator('tbody tr').count()) === 2, '两组续接更新');
+  await preset('逐块提交'); await last(); check((await page.getByRole('table', { name: '语音流式续接更新' }).locator('tbody tr').count()) === 4, '逐块更新改变次数');
+  await preset('模型不支持续接'); await last(); check((await page.locator('[data-visual-key="speech-gate"]').innerText()).includes('不支持'), '不支持时阻止续接');
+  results.push('语音块缓冲、续接上下文与模型接口边界');
+  await open('tools'); await preset('跨块工具参数'); await last();
+  check((await page.locator('[data-visual-key="parser-gate"]').innerText()).includes('完整工具对象'), '合法对象交付');
+  await preset('损坏的工具 JSON'); await last(); check((await page.locator('[data-visual-key="parser-gate"]').innerText()).includes('禁止工具交付'), '坏 JSON 不交付');
+  await preset('关闭 parser'); await last(); check((await page.locator('.roadmap-protocol-fields').innerText()).includes('<tool_call>'), '关闭 parser 保留原始文本');
+  results.push('跨块标记、工具 JSON 完整性与原始正文');
+  await open('thinking'); await preset('零预算立即退出'); await last();
+  check((await page.locator('[data-visual-key^="thinking-reasoning-"]').count()) === 0 && (await page.locator('[data-visual-key^="thinking-content-"]').count()) === 2, '零预算仍有正文');
+  await preset('缺少结束标记配置'); await last(); check((await page.locator('[data-visual-key^="thinking-reasoning-"]').count()) === 10, '无结束配置不强制预算');
+  results.push('多段思考预算、零预算与结束配置');
+  await open('encoder-disagg'); await preset('已有 EC 缓存命中'); await last(); check((await page.locator('[data-visual-key="ec-gate"]').innerText()).includes('encoder 0 次'), '共享 EC 命中不重新编码');
+  await preset('传输失败阻止 LM'); await last(); check((await page.locator('[data-visual-key="ec-gate"]').innerText()).includes('禁止语言模型消费'), 'EC 缺失阻止 LM');
+  results.push('EC 复用、消费侧确认与传输失败');
+  await open('serving'); await preset('SSE 与 usage'); await last(); const wire = await page.locator('.roadmap-wire').innerText();
+  check(wire.includes('"choices":[]') && wire.includes('[DONE]') && wire.includes('"finish_reason":"stop"'), '正常 SSE 结束字段');
+  await preset('第二片段断连'); await last(); check(!(await page.locator('.roadmap-wire').innerText()).includes('[DONE]'), '断连不伪造成功终结');
+  await preset('请求无效'); await last(); check((await page.locator('[data-visual-key="sse-gate"]').innerText()).includes('校验失败'), '请求无效门禁');
+  results.push('异步队列、SSE 结束、usage 与断连中止');
+  await open('fault'); await preset('Worker 故障传播'); await last(); check((await page.getByRole('table', { name: '故障传播请求状态' }).innerText()).includes('已中止'), '故障终止原请求');
+  await preset('只取消请求 A'); await last(); check((await page.getByRole('table', { name: '故障传播请求状态' }).locator('tbody tr').last().innerText()).includes('已完成'), 'B 正常完成');
+  await preset('恢复失败保留错误'); await last(); check((await page.locator('.roadmap-protocol-fields').innerText()).includes('unhealthy'), '失败保留非健康');
+  results.push('故障传播、确认后清理和局部取消');
+  return results;
+}

@@ -327,6 +327,6 @@ test('新增专题所有事件可渲染并映射讲解；参数链接和持久�
   assert.deepEqual(loadStudy(storage, ids), study);
   assert.equal(
     lessons.filter((l) => l.kind === 'flow' && !executableIds.includes(l.id)).length,
-    30,
+    0,
   );
 });

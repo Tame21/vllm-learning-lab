@@ -56,7 +56,8 @@ export async function runEditorBrowserRegressions(tab) {
   await doc.click();
   const target = await readTarget();
   check(target.relative === expected && target.line === 1, '参考文档可在 VS Code 从首行打开');
-  await page.getByRole('button', { name: '自动换行', exact: true }).click();
+  if ((await page.getByRole('button', { name: '自动换行', exact: true }).getAttribute('aria-pressed')) !== 'true')
+    await page.getByRole('button', { name: '自动换行', exact: true }).click();
   check(
     (await page
       .getByRole('button', { name: '自动换行', exact: true })

@@ -5,6 +5,8 @@ import { challengeFor } from './learning.mjs';
 import { learningContext, quizView, pathView } from './learning-view.mjs';
 import { createTraceCache, executableIds } from './engine.mjs';
 import { mechanismIds } from './mechanism-parameters.mjs';
+import { mechanismScenarioButtons, mechanismPresetParameters } from './mechanism-presets.mjs';
+import { lessonFormats, matchesLessonFormat } from './lesson-formats.mjs';
 import { algorithmCatalogView, algorithmIntro, algorithmNotes } from './algorithm-view.mjs';
 import { comparisonView } from './experiment-view.mjs';
 import { foundationCatalogView, foundationIntro } from './foundation-view.mjs';
@@ -66,6 +68,7 @@ let data,
   lesson = lessons.find((l) => l.id === (route?.id || study.lastLesson)) || lessons[0],
   view = toolViews.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'lab',
   query = '',
+  lessonFormatFilter = 'all',
   timer = null,
   speed = 1;
 const initial = route?.explicit ? route : study.sessions[lesson.id];
@@ -165,6 +168,7 @@ function render() {
     `
  <aside class="sidebar"><a class="brand" href="#lifecycle" data-lesson="lifecycle"><span class="brand-icon">${icon}</span><span>vLLM <em>Lab</em><small>推理，逐步看见。</small></span></a>
  <div class="search-wrap"><span>⌕</span><input id="search" type="search" aria-label="搜索学习专题" placeholder="搜索特性或关键词" value="${esc(query)}"><kbd>/</kbd></div>
+ <label class="lesson-format-filter"><span>内容形式</span><select id="lesson-format" aria-label="筛选学习内容形式">${lessonFormats.map(([id, label]) => `<option value="${id}" ${lessonFormatFilter === id ? 'selected' : ''}>${label} · ${lessons.filter((l) => matchesLessonFormat(l, id)).length}</option>`).join('')}</select></label>
  <nav class="sidebar-tools" aria-label="快捷工具"><button data-view="command" class="sidebar-command ${view === 'command' ? 'active' : ''}" ${view === 'command' ? 'aria-current="page"' : ''}><span class="sidebar-command-icon" aria-hidden="true">⌘</span><span><strong>启动命令 → 流程图</strong><small>按参数看路径，点击读源码</small></span><span class="sidebar-command-arrow" aria-hidden="true">↗</span></button></nav>
  <div class="sidebar-caption">学习地图 <span>${lessons.length} 个专题</span></div><nav class="lesson-nav" aria-label="学习专题">${
    groups
@@ -172,6 +176,7 @@ function render() {
        const matches = lessons.filter(
          (l) =>
            l.group === g[0] &&
+           matchesLessonFormat(l, lessonFormatFilter) &&
            `${l.title} ${l.english} ${l.summary}`.toLowerCase().includes(query.toLowerCase()),
        );
        return matches.length
@@ -193,9 +198,9 @@ function laboratory() {
  ${routeWarning ? `<p class="notice">${esc(routeWarning)}，已恢复安全的默认页面。</p>` : ''}${learningContext(lesson, lessons, terms)}${specLessonContext(lesson)}${algorithmIntro(lesson)}${foundationIntro(lesson)}
  ${focusedDoc ? `<div class="variant-banner"><div><span class="badge">${esc(focusedDoc.level)}</span><strong>${esc(focusedDoc.title)}</strong><p>${esc(focusedDoc.note)}</p></div><button data-source="${esc(focusedDoc.path)}">阅读具体变体文档 ↗</button></div>` : ''}
  <div class="lab-layout"><section class="experiment" aria-label="执行过程可视化"><div class="experiment-toolbar"><div><span class="live-symbol">◈</span><strong>${executableIds.includes(lesson.id) ? '执行观察窗' : lesson.kind === 'flow' ? '流程概览' : '机制图解'}</strong><span class="badge">教学模拟</span></div><div class="toolbar-actions"><button data-action="play" aria-label="${timer ? '暂停动画' : '播放动画'}">${timer ? 'Ⅱ' : '▶'}</button><button data-action="next" aria-label="从观察窗前进一步" ${index === f.length - 1 ? 'disabled' : ''}>单步 →</button><span class="step-indicator">${String(index + 1).padStart(2, '0')} <small>/ ${String(f.length).padStart(2, '0')}</small></span></div></div>
- <div class="scene" id="scene">${scene(lesson, index, options, f)}</div>
+ ${mechanismScenarioButtons(lesson, options)}<div class="scene" id="scene">${scene(lesson, index, options, f)}</div>
  <div class="playback"><div class="playback-buttons"><button class="icon-button" data-action="reset" aria-label="重置">↺</button><button class="icon-button" data-action="prev" aria-label="上一步" ${index === 0 ? 'disabled' : ''}>‹</button><button class="play-button" data-action="play">${timer ? 'Ⅱ 暂停' : '▶ 播放'}</button><button class="icon-button" data-action="next" aria-label="下一步" ${index === f.length - 1 ? 'disabled' : ''}>›</button></div><input aria-label="执行时间轴" type="range" min="0" max="${f.length - 1}" value="${index}" id="scrubber"><select id="speed" aria-label="播放速度">${[0.5, 1, 2].map((v) => `<option ${speed === v ? 'selected' : ''} value="${v}">${v}×</option>`).join('')}</select></div>
- <div class="settings"><div class="settings-title"><strong>${lesson.kind === 'spec-method' ? '按步骤观察' : '动手改一改'}</strong><small>${lesson.kind === 'spec-method' ? '对照输入、依赖和源码' : '调整参数后从头演示'}</small></div>${controls(lesson, options)}<p id="parameter-error" role="alert"></p></div>${comparisonView(lesson, traceCache(lesson, options).comparison, f, options)}</section>
+ <div class="settings"><div class="settings-title"><strong>动手改一改</strong><small>调整参数后从头演示</small></div>${controls(lesson, options)}<p id="parameter-error" role="alert"></p></div>${comparisonView(lesson, traceCache(lesson, options).comparison, f, options, index)}</section>
  <aside class="explanation"><div class="detail-tabs" role="tablist">${[
    ['explain', '这一步'],
    ['source', '对应源码'],
@@ -207,7 +212,7 @@ function laboratory() {
    )
    .join(
      '',
-   )}</div><div class="detail-body" aria-live="polite">${tab === 'source' ? sourcePanel() : tab === 'quiz' ? quiz() : `<span class="eyebrow">${lesson.kind === 'scheduler' ? '本轮发生了什么' : 'WHY & HOW'}</span><h2>${lesson.kind === 'scheduler' ? `第 ${index + 1} 轮调度` : esc(s.title)}</h2>${executableIds.includes(lesson.id) ? `${mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? `<p>${esc(s.body)}</p>` : ''}<ol class="event-list">${f[index].events.map((e) => `<li>${esc(e)}</li>`).join('') || '<li>请求继续计算已调度的 token。</li>'}</ol>` : `<p>${esc(s.body)}</p>`}<div class="analogy"><span>换个角度理解</span><p>${esc(lesson.analogy)}</p></div><div class="watch"><span>观察重点</span><p>${lesson.kind === 'scheduler' ? '浅色是待计算 prompt，蓝色是已计算位置，绿色是已经生成的输出；P、D 是新位置计算，R 是抢占后的历史 KV 重算。' : esc(f[index].body ?? (mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? lesson.steps[f[index].stepIndex].change : s.change))}</p></div><button class="source-jump" data-tab="source">${lesson.kind === 'foundation' ? '看概念的源码应用' : '定位这一步的源码'} <span>↗</span></button>`}</div></aside></div>
+   )}</div><div class="detail-body" aria-live="polite">${tab === 'source' ? sourcePanel() : tab === 'quiz' ? quiz() : `<span class="eyebrow">${lesson.kind === 'scheduler' ? '本轮发生了什么' : 'WHY & HOW'}</span><h2>${lesson.kind === 'scheduler' ? `第 ${index + 1} 轮调度` : esc(s.title)}</h2>${executableIds.includes(lesson.id) ? `${mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind) ? `<p>${esc(s.body)}</p>` : ''}<ol class="event-list">${f[index].events.map((e) => `<li>${esc(e)}</li>`).join('') || '<li>请求继续计算已调度的 token。</li>'}</ol>` : `<p>${esc(s.body)}</p>`}<div class="analogy"><span>换个角度理解</span><p>${esc(lesson.analogy)}</p></div><div class="watch"><span>观察重点</span><p>${lesson.kind === 'scheduler' ? '浅色是待计算 prompt，蓝色是已计算位置，绿色是已经生成的输出；P、D 是新位置计算，R 是抢占后的历史 KV 重算。' : esc(f[index].body ?? (mechanismIds.includes(lesson.id) ? (f[index].status ?? f[index].events.join(' ')) : ['algorithm', 'foundation'].includes(lesson.kind) ? lesson.steps[f[index].stepIndex].change : s.change))}</p></div><button class="source-jump" data-tab="source">${lesson.kind === 'foundation' ? '看概念的源码应用' : '定位这一步的源码'} <span>↗</span></button>`}</div></aside></div>
  ${algorithmNotes(lesson, lessons)}<div class="below-lab"><section class="steps-section"><div class="section-heading"><h2>理解这条执行链</h2><span>${lesson.steps.length} 个关键环节</span></div><div class="step-list">${lesson.steps.map((s, n) => `<button data-${(mechanismIds.includes(lesson.id) || ['algorithm', 'foundation'].includes(lesson.kind)) && f.some((frame) => frame.stepIndex === n) ? 'scene-stage' : executableIds.includes(lesson.id) ? 'explain-step' : 'step'}="${n}" class="${n === (f[index]?.stepIndex ?? index) ? 'active' : ''}"><span>${String(n + 1).padStart(2, '0')}</span><div><b>${esc(s.title)}</b><small>${esc(s.change)}</small></div><span>↗</span></button>`).join('')}</div></section><section class="source-summary"><span class="eyebrow">READ THE IMPLEMENTATION</span><h2>带着问题回到源码</h2><p>${lesson.kind === 'foundation' ? '以下源码是概念的应用或对照位置。数学玩具例子独立计算，不代表这些文件实现了本课所有公式。' : '右侧“对应源码”定位当前步骤。下方为相关参考文件，可继续查阅真实分支与平台约束。'}</p>${lesson.refs.map((r, n) => `<button class="file-link" data-ref="${n}"><span>⌘</span><div><b>${esc(r.path.split('/').at(-1))}</b><small>${esc(r.path)}</small></div><span>↗</span></button>`).join('')}<div class="next-lesson"><button data-action="next-lesson">继续下一个专题 →</button></div></section></div>`;
 }
 function currentSources() {
@@ -384,6 +389,8 @@ document.addEventListener('click', (e) => {
     };
     return updateOptions({ blockSize: 4, chunked: true, ...presets[b.dataset.preset] });
   }
+  if (b.dataset.mechanismPreset !== undefined)
+    return updateOptions(mechanismPresetParameters(lesson.id, Number(b.dataset.mechanismPreset)));
   if (b.dataset.removeRequest !== undefined) {
     return updateOptions({
       requests: (options.requests || exampleRequests).filter(
@@ -407,6 +414,10 @@ document.addEventListener('click', (e) => {
   if (b.dataset.tab) {
     tab = b.dataset.tab;
     return render();
+  }
+  if (b.dataset.lessonStep !== undefined) {
+    pause();
+    return jump(Math.max(0, frames().findIndex((f) => f.stepIndex === Number(b.dataset.lessonStep))));
   }
   if (b.dataset.step !== undefined) {
     pause();
@@ -560,6 +571,10 @@ function updateOptions(input) {
   }
 }
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'lesson-format') {
+    lessonFormatFilter = e.target.value;
+    return render();
+  }
   if (e.target.dataset.specCompare !== undefined) {
     specState.compare[Number(e.target.dataset.specCompare)] = e.target.value;
     return render();
@@ -582,7 +597,7 @@ document.addEventListener('change', (e) => {
   if (e.target.dataset.param)
     updateOptions({
       [e.target.dataset.param]:
-        e.target.type === 'checkbox' ? e.target.checked : Number(e.target.value),
+        e.target.type === 'checkbox' ? e.target.checked : typeof defaults[e.target.dataset.param] === 'string' ? e.target.value : Number(e.target.value),
     });
   if (e.target.dataset.request !== undefined) {
     const requests = structuredClone(options.requests || exampleRequests);
@@ -612,6 +627,10 @@ document.addEventListener('input', (e) => {
   }
 });
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.dataset.param && typeof defaults[e.target.dataset.param] === 'string') {
+    e.preventDefault();
+    return updateOptions({ [e.target.dataset.param]: e.target.value });
+  }
   if (e.target.id === 'launch-command' && (e.ctrlKey || e.metaKey) && e.key === 'Enter') {
     e.preventDefault();
     return generateCommand();
