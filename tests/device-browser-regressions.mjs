@@ -23,15 +23,13 @@ export async function runDeviceBrowserRegressions(tab) {
   check((await page.locator('.device-tier.gpu .ready').count()) === 3, '增加容量减少淘汰');
   results.push('KV 卸载、缺失重算与容量场景');
 
-  await page.getByLabel('筛选学习内容形式', { exact: true }).selectOption('experiment');
-  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 114, '仅显示可推演专题');
+  check((await page.getByLabel('筛选学习内容形式', { exact: true }).count()) === 0, '只有一种内容形式时隐藏无效筛选');
+  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 114, '全部专题仍可访问');
   await page.getByLabel('搜索学习专题', { exact: true }).fill('CUDA');
-  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 2 && (await page.locator('.lesson-nav button[data-lesson="cudagraph"]').count()) === 1 && (await page.locator('.lesson-nav button[data-lesson="platform"]').count()) === 1, '形式筛选与关键词组合');
+  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 2 && (await page.locator('.lesson-nav button[data-lesson="cudagraph"]').count()) === 1 && (await page.locator('.lesson-nav button[data-lesson="platform"]').count()) === 1, '关键词筛选保留');
   await page.getByLabel('搜索学习专题', { exact: true }).press('ControlOrMeta+A');
   await page.getByLabel('搜索学习专题', { exact: true }).press('Backspace');
-  await page.getByLabel('筛选学习内容形式', { exact: true }).selectOption('flow');
-  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 0, '剩余流程概览数量准确');
-  await page.getByLabel('筛选学习内容形式', { exact: true }).selectOption('all');
-  results.push('学习内容形式筛选与关键词组合');
+  check((await page.locator('.lesson-nav button[data-lesson]').count()) === 114, '清空搜索后恢复全部专题');
+  results.push('单一内容形式隐藏筛选，关键词搜索与清空恢复');
   return results;
 }

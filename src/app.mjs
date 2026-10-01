@@ -26,6 +26,9 @@ import { prepareEditorLink } from './source-editor.mjs';
 const app = document.querySelector('#app'),
   dialog = document.querySelector('#source-dialog');
 const ids = lessons.map((l) => l.id);
+const lessonFormatOptions = lessonFormats
+  .map(([id, label]) => [id, label, lessons.filter((l) => matchesLessonFormat(l, id)).length])
+  .filter(([id, , count]) => id === 'all' || count > 0);
 let storage;
 try {
   storage = localStorage;
@@ -168,7 +171,7 @@ function render() {
     `
  <aside class="sidebar"><a class="brand" href="#lifecycle" data-lesson="lifecycle"><span class="brand-icon">${icon}</span><span>vLLM <em>Lab</em><small>推理，逐步看见。</small></span></a>
  <div class="search-wrap"><span>⌕</span><input id="search" type="search" aria-label="搜索学习专题" placeholder="搜索特性或关键词" value="${esc(query)}"><kbd>/</kbd></div>
- <label class="lesson-format-filter"><span>内容形式</span><select id="lesson-format" aria-label="筛选学习内容形式">${lessonFormats.map(([id, label]) => `<option value="${id}" ${lessonFormatFilter === id ? 'selected' : ''}>${label} · ${lessons.filter((l) => matchesLessonFormat(l, id)).length}</option>`).join('')}</select></label>
+ ${lessonFormatOptions.length > 2 ? `<label class="lesson-format-filter"><span>内容形式</span><select id="lesson-format" aria-label="筛选学习内容形式">${lessonFormatOptions.map(([id, label, count]) => `<option value="${id}" ${lessonFormatFilter === id ? 'selected' : ''}>${label} · ${count}</option>`).join('')}</select></label>` : ''}
  <nav class="sidebar-tools" aria-label="快捷工具"><button data-view="command" class="sidebar-command ${view === 'command' ? 'active' : ''}" ${view === 'command' ? 'aria-current="page"' : ''}><span class="sidebar-command-icon" aria-hidden="true">⌘</span><span><strong>启动命令 → 流程图</strong><small>按参数看路径，点击读源码</small></span><span class="sidebar-command-arrow" aria-hidden="true">↗</span></button></nav>
  <div class="sidebar-caption">学习地图 <span>${lessons.length} 个专题</span></div><nav class="lesson-nav" aria-label="学习专题">${
    groups
